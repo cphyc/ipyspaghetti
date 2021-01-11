@@ -53,7 +53,10 @@
     "@jupyterlab/mainmenu": "^3.0.2",
     "@jupyterlab/outputarea": "^3.0.2",
     "@jupyterlab/services": "^6.0.0",
-    "@types/codemirror": "^0.0.106"
+    "@types/codemirror": "^0.0.106",
+    "hsl-to-rgb-for-reals": "^1.1.1",
+    "litegraph.js": "^0.7.9",
+    "object-hash": "^2.1.1"
   },
   "devDependencies": {
     "@jupyterlab/builder": "^3.0.0",
