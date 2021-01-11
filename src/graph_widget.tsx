@@ -13,18 +13,27 @@ import { GraphHandler } from './graph';
 let current_id = 0;
 class GraphComponent extends React.Component {
     myId: string;
+    width: number;
+    height: number;
     componentDidMount() {
-        const graph = new GraphHandler(this.myId);
+        const graph = new GraphHandler(`#${this.myId}`);
         console.log(graph);
     }
 
     render() {
-        this.myId = `#graph-${current_id}`;
+        this.myId = `graph-${current_id}`;
         current_id++;
+
+        // TODO: adapt size when parent changes
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
         return (
-            <div id={this.myId}>
-                Hello!
-            </div>
+            <canvas
+                width={this.width}
+                height={this.height}
+                id={this.myId}
+            >
+            </canvas>
         );
     }
 };
