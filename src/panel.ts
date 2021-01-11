@@ -2,7 +2,8 @@ import {
   ISessionContext,
   SessionContext,
   sessionContextDialogs,
-  Toolbar
+  Toolbar,
+  MainAreaWidget
 } from '@jupyterlab/apputils';
 
 import {
@@ -33,7 +34,9 @@ import { Message } from '@lumino/messaging';
 
 import { CommandRegistry } from '@lumino/commands';
 
-import { BoxPanel } from '@lumino/widgets';
+import { BoxPanel, SplitPanel } from '@lumino/widgets';
+
+import { GraphWidget } from './graph_widget';
 
 /**
  * The class name added to the example panel.
@@ -43,14 +46,16 @@ const PANEL_CLASS = 'jp-RovaPanel';
 /**
  * A panel with the ability to add other children.
  */
-export class ExamplePanel extends BoxPanel {
+export class ExamplePanel extends SplitPanel {
   constructor(
     manager: ServiceManager.IManager,
     rendermime: IRenderMimeRegistry,
     commands: CommandRegistry,
     translator?: ITranslator,
   ) {
-    super();
+    super({
+      orientation: "vertical"
+    });
     this._translator = translator || nullTranslator;
     this._trans = this._translator.load('jupyterlab');
     this.addClass(PANEL_CLASS);
@@ -74,10 +79,11 @@ export class ExamplePanel extends BoxPanel {
     const mimeService = new CodeMirrorMimeTypeService();
     this._cell = new CodeCell({
       model: cellModel,
-      rendermime
+      rendermime,
     }).initializeState();
 
     this._cell.outputHidden = false;
+    this._cell.outputsScrolled = true;
 
     // Handle the mimeType for the current kernel asynchronously.
     this._sessionContext.kernelChanged.connect(() => {
@@ -114,13 +120,24 @@ export class ExamplePanel extends BoxPanel {
     toolbar.addItem('restart', Toolbar.createRestartButton(this._sessionContext));
     toolbar.addItem('name', Toolbar.createKernelNameItem(this._sessionContext));
     toolbar.addItem('status', Toolbar.createKernelStatusItem(this._sessionContext));
+
+    // Graph widget
+    const content = new GraphWidget();
+    const widget = new MainAreaWidget<GraphWidget>({content});
+    widget.title.label = 'React Widget';
+    widget.show();
+
+    // Lay out the widgets
+    const box = new BoxPanel({});
     BoxPanel.setStretch(toolbar, 0);
     BoxPanel.setStretch(this._cell, 1);
+    [completer, toolbar, this._cell].forEach(w => box.addWidget(w));
 
+    SplitPanel.setStretch(widget, 1)
+    SplitPanel.setStretch(box, 1);
     // Lay out the widgets.
-    this.addWidget(completer);
-    this.addWidget(toolbar);
-    this.addWidget(this._cell);
+    this.addWidget(widget);
+    this.addWidget(box);
 
     // Add the commands.
     commands.addCommand('invoke:completer', {
