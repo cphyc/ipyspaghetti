@@ -7,9 +7,10 @@ import {
 
 import {
   CodeCell,
-  CodeCellModel
+  CodeCellModel,
 } from '@jupyterlab/cells';
 
+import { CodeMirrorMimeTypeService } from '@jupyterlab/codemirror';
 import {
   CompleterModel,
   Completer,
@@ -57,9 +58,11 @@ export class ExamplePanel extends BoxPanel {
     this.title.label = this._trans.__('Kernel Output Example View');
     this.title.closable = true;
 
+    const { sessions, kernelspecs } = manager;
+
     this._sessionContext = new SessionContext({
-      sessionManager: manager.sessions,
-      specsManager: manager.kernelspecs,
+      sessionManager: sessions,
+      specsManager: kernelspecs,
       name: 'Kernel Output'
     });
 
@@ -67,12 +70,23 @@ export class ExamplePanel extends BoxPanel {
     /** ---------------------------------------------------------------
      * Create input code cell
      */
-    let cellmodel = new CodeCellModel({});
+    const cellModel = new CodeCellModel({});
+    const mimeService = new CodeMirrorMimeTypeService();
     this._cell = new CodeCell({
-      model: cellmodel,
+      model: cellModel,
       rendermime
     }).initializeState();
+
     this._cell.outputHidden = false;
+
+    // Handle the mimeType for the current kernel asynchronously.
+    this._sessionContext.kernelChanged.connect(() => {
+      void this._sessionContext.session?.kernel?.info.then(info => {
+        const lang = info.language_info;
+        const mimeType = mimeService.getMimeTypeByLanguage(lang);
+        cellModel.mimeType = mimeType;
+      });
+    });
 
     // Set up a completer.
     const editor = this._cell.editor;
@@ -83,7 +97,7 @@ export class ExamplePanel extends BoxPanel {
 
     editor.setOption("codeFolding", true);
     editor.setOption("lineNumbers", true);
-    cellmodel.value.text = "import yt\nds = yt.load('output_00080/info_00080.txt')\np = yt.SlicePlot(ds, 'x', 'density')"
+    cellModel.value.text = "import yt\nds = yt.load('output_00080/info_00080.txt')\np = yt.SlicePlot(ds, 'x', 'density')"
 
     console.log(editor.model);
 
@@ -115,7 +129,9 @@ export class ExamplePanel extends BoxPanel {
       }
     });
     commands.addCommand('run:cell', {
-      execute: () => CodeCell.execute(this._cell, this._sessionContext)
+      execute: () => {
+        CodeCell.execute(this._cell, this._sessionContext);
+      }
     });
 
     commands.addKeyBinding({

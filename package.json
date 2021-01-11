@@ -46,12 +46,14 @@
     "@jupyterlab/application": "^3.0.2",
     "@jupyterlab/cells": "^3.0.2",
     "@jupyterlab/codeeditor": "^3.0.2",
+    "@jupyterlab/codemirror": "^3.0.2",
     "@jupyterlab/completer": "^3.0.2",
     "@jupyterlab/coreutils": "^5.0.0",
     "@jupyterlab/launcher": "^3.0.2",
     "@jupyterlab/mainmenu": "^3.0.2",
     "@jupyterlab/outputarea": "^3.0.2",
-    "@jupyterlab/services": "^6.0.0"
+    "@jupyterlab/services": "^6.0.0",
+    "@types/codemirror": "^0.0.106"
   },
   "devDependencies": {
     "@jupyterlab/builder": "^3.0.0",
