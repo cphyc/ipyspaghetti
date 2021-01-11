@@ -44,6 +44,8 @@
   },
   "dependencies": {
     "@jupyterlab/application": "^3.0.2",
+    "@jupyterlab/cells": "^3.0.2",
+    "@jupyterlab/completer": "^3.0.2",
     "@jupyterlab/coreutils": "^5.0.0",
     "@jupyterlab/launcher": "^3.0.2",
     "@jupyterlab/mainmenu": "^3.0.2",

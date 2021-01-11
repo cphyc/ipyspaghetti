@@ -3,7 +3,7 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
-import { ICommandPalette, InputDialog } from '@jupyterlab/apputils';
+import { ICommandPalette } from '@jupyterlab/apputils';
 
 import { ILauncher } from '@jupyterlab/launcher';
 
@@ -24,8 +24,6 @@ import { requestAPI } from './handler';
  */
 namespace CommandIDs {
   export const create = 'kernel-output:create';
-
-  export const execute = 'kernel-output:execute';
 }
 
 /**
@@ -71,7 +69,7 @@ function activate(
    * @returns The panel
    */
   async function createPanel(): Promise<ExamplePanel> {
-    panel = new ExamplePanel(manager, rendermime, translator);
+    panel = new ExamplePanel(manager, rendermime, commands, translator);
     shell.add(panel, 'main');
     return panel;
   }
@@ -88,30 +86,8 @@ function activate(
     execute: createPanel
   });
 
-  commands.addCommand(CommandIDs.execute, {
-    label: trans.__('Contact Kernel and Execute Code'),
-    caption: trans.__('Contact Kernel and Execute Code'),
-    execute: async () => {
-      // Create the panel if it does not exist
-      if (!panel) {
-        await createPanel();
-      }
-      // Prompt the user about the statement to be executed
-      const input = await InputDialog.getText({
-        title: trans.__('Code to execute'),
-        okLabel: trans.__('Execute'),
-        placeholder: trans.__('Statement to execute')
-      });
-      // Execute the statement
-      if (input.button.accept) {
-        const code = input.value;
-        panel.execute(code);
-      }
-    }
-  });
-
   // add items in command palette and menu
-  [CommandIDs.create, CommandIDs.execute].forEach(command => {
+  [CommandIDs.create].forEach(command => {
     palette.addItem({ command, category });
     exampleMenu.addItem({ command });
   });

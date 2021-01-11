@@ -1,14 +1,27 @@
 import {
   ISessionContext,
   SessionContext,
-  sessionContextDialogs
+  sessionContextDialogs,
+  Toolbar
 } from '@jupyterlab/apputils';
 
-import { OutputAreaModel, SimplifiedOutputArea } from '@jupyterlab/outputarea';
+import {
+  CodeCell,
+  CodeCellModel
+} from '@jupyterlab/cells';
 
-import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import {
+  CompleterModel,
+  Completer,
+  CompletionHandler,
+  KernelConnector
+} from '@jupyterlab/completer';
 
-import { KernelMessage, ServiceManager } from '@jupyterlab/services';
+import {
+  IRenderMimeRegistry,
+} from '@jupyterlab/rendermime';
+
+import { ServiceManager } from '@jupyterlab/services';
 import {
   ITranslator,
   nullTranslator,
@@ -17,7 +30,9 @@ import {
 
 import { Message } from '@lumino/messaging';
 
-import { StackedPanel } from '@lumino/widgets';
+import { CommandRegistry } from '@lumino/commands';
+
+import { BoxPanel } from '@lumino/widgets';
 
 /**
  * The class name added to the example panel.
@@ -27,11 +42,12 @@ const PANEL_CLASS = 'jp-RovaPanel';
 /**
  * A panel with the ability to add other children.
  */
-export class ExamplePanel extends StackedPanel {
+export class ExamplePanel extends BoxPanel {
   constructor(
     manager: ServiceManager.IManager,
     rendermime: IRenderMimeRegistry,
-    translator?: ITranslator
+    commands: CommandRegistry,
+    translator?: ITranslator,
   ) {
     super();
     this._translator = translator || nullTranslator;
@@ -47,13 +63,65 @@ export class ExamplePanel extends StackedPanel {
       name: 'Kernel Output'
     });
 
-    this._outputareamodel = new OutputAreaModel();
-    this._outputarea = new SimplifiedOutputArea({
-      model: this._outputareamodel,
-      rendermime: rendermime
+
+    /** ---------------------------------------------------------------
+     * Create input code cell
+     */
+    let _cellmodel = new CodeCellModel({});
+    this._cell = new CodeCell({
+      model: _cellmodel,
+      rendermime
+    }).initializeState();
+    this._cell.outputHidden = false;
+
+    // Set up a completer.
+    const editor = this._cell.editor;
+    const model = new CompleterModel();
+    const completer = new Completer({ editor, model });
+    const connector = new KernelConnector({ session: this._sessionContext.session });
+    const handler = new CompletionHandler({ completer, connector });
+
+    // Set the handler's editor.
+    handler.editor = editor;
+
+    // Hide the widget when it first loads.
+    completer.hide();
+
+    // Create a toolbar for the cell.
+    const toolbar = new Toolbar();
+    toolbar.addItem('spacer', Toolbar.createSpacerItem());
+    toolbar.addItem('interrupt', Toolbar.createInterruptButton(this._sessionContext));
+    toolbar.addItem('restart', Toolbar.createRestartButton(this._sessionContext));
+    toolbar.addItem('name', Toolbar.createKernelNameItem(this._sessionContext));
+    toolbar.addItem('status', Toolbar.createKernelStatusItem(this._sessionContext));
+    BoxPanel.setStretch(toolbar, 0);
+    BoxPanel.setStretch(this._cell, 1);
+
+    // Lay out the widgets.
+    this.addWidget(completer);
+    this.addWidget(toolbar);
+    this.addWidget(this._cell);
+
+    // Add the commands.
+    commands.addCommand('invoke:completer', {
+      execute: () => {
+        handler.invoke();
+      }
+    });
+    commands.addCommand('run:cell', {
+      execute: () => CodeCell.execute(this._cell, this._sessionContext)
     });
 
-    this.addWidget(this._outputarea);
+    commands.addKeyBinding({
+      selector: '.jp-InputArea-editor.jp-mod-completer-enabled',
+      keys: ['Tab'],
+      command: 'invoke:completer'
+    });
+    commands.addKeyBinding({
+      selector: '.jp-InputArea-editor',
+      keys: ['Shift Enter'],
+      command: 'run:cell'
+    });
 
     void this._sessionContext
       .initialize()
@@ -78,22 +146,14 @@ export class ExamplePanel extends StackedPanel {
     super.dispose();
   }
 
-  execute(code: string): void {
-    SimplifiedOutputArea.execute(code, this._outputarea, this._sessionContext)
-      .then((msg: KernelMessage.IExecuteReplyMsg) => {
-        console.log(msg);
-      })
-      .catch(reason => console.error(reason));
-  }
-
   protected onCloseRequest(msg: Message): void {
     super.onCloseRequest(msg);
     this.dispose();
   }
 
   private _sessionContext: SessionContext;
-  private _outputarea: SimplifiedOutputArea;
-  private _outputareamodel: OutputAreaModel;
+
+  private _cell: CodeCell;
 
   private _translator: ITranslator;
   private _trans: TranslationBundle;
