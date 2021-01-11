@@ -67,9 +67,9 @@ export class ExamplePanel extends BoxPanel {
     /** ---------------------------------------------------------------
      * Create input code cell
      */
-    let _cellmodel = new CodeCellModel({});
+    let cellmodel = new CodeCellModel({});
     this._cell = new CodeCell({
-      model: _cellmodel,
+      model: cellmodel,
       rendermime
     }).initializeState();
     this._cell.outputHidden = false;
@@ -81,7 +81,13 @@ export class ExamplePanel extends BoxPanel {
     const connector = new KernelConnector({ session: this._sessionContext.session });
     const handler = new CompletionHandler({ completer, connector });
 
-    // Set the handler's editor.
+    editor.setOption("codeFolding", true);
+    editor.setOption("lineNumbers", true);
+    cellmodel.value.text = "import yt\nds = yt.load('output_00080/info_00080.txt')\np = yt.SlicePlot(ds, 'x', 'density')"
+
+    console.log(editor.model);
+
+    // Set handler's editor.
     handler.editor = editor;
 
     // Hide the widget when it first loads.
