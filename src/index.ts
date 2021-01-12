@@ -23,9 +23,6 @@ import { Menu } from '@lumino/widgets';
 
 import { ExamplePanel } from './panel';
 
-// // @ts-ignore
-// import pyGraphExtension from "./mime";
-
 /**
  * The command IDs used by the console plugin.
  */
@@ -40,7 +37,13 @@ const extension: JupyterFrontEndPlugin<void> = {
   id: 'node_editor:plugin',
   autoStart: true,
   optional: [ILauncher],
-  requires: [ICommandPalette, IMainMenu, IRenderMimeRegistry, ITranslator, ILayoutRestorer],
+  requires: [
+    ICommandPalette,
+    IMainMenu,
+    IRenderMimeRegistry,
+    ITranslator,
+    ILayoutRestorer
+  ],
   activate: activate
 };
 
@@ -76,10 +79,15 @@ function activate(
    *
    * @returns The panel
    */
-   function createPanel() {
+   function createPanel(): void {
     if (!widget || widget.isDisposed) {
-      const content = new ExamplePanel(manager, rendermime, commands, translator);
-      widget = new MainAreaWidget({content});
+      const content = new ExamplePanel(
+        manager,
+        rendermime,
+        commands,
+        translator
+      );
+      widget = new MainAreaWidget({ content });
       widget.id = 'node_editor';
       widget.title.label = 'Node Editor';
       widget.title.closable = true;
@@ -93,11 +101,10 @@ function activate(
       app.shell.add(widget, 'main');
     }
     widget.content.update();
-    
+
     // Activate the widget
     shell.activateById(widget.id);
   }
-
 
   // add menu tab
   const exampleMenu = new Menu({ commands });
@@ -125,7 +132,7 @@ function activate(
     });
   }
 
-  let tracker = new WidgetTracker<MainAreaWidget<ExamplePanel>>({
+  const tracker = new WidgetTracker<MainAreaWidget<ExamplePanel>>({
     namespace: 'node_editor'
   });
   restorer.restore(tracker, {
