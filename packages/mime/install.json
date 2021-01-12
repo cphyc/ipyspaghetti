@@ -1,5 +1,0 @@
-{
-  "packageManager": "python",
-  "packageName": "node_editor/mime",
-  "uninstallInstructions": "Use your Python package manager (pip, conda, etc.) to uninstall the package node_editor/mime"
-}
