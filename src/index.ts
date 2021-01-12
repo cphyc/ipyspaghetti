@@ -10,7 +10,6 @@ import {
   MainAreaWidget
 } from '@jupyterlab/apputils';
 
-
 import { ILauncher } from '@jupyterlab/launcher';
 
 import { IMainMenu } from '@jupyterlab/mainmenu';
@@ -79,7 +78,7 @@ function activate(
    *
    * @returns The panel
    */
-   function createPanel(): void {
+  function createPanel(): void {
     if (!widget || widget.isDisposed) {
       const content = new ExamplePanel(
         manager,
@@ -139,7 +138,6 @@ function activate(
     command: CommandIDs.create,
     name: () => 'node_editor'
   });
-
 }
 
 export default extension;

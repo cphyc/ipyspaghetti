@@ -305,7 +305,7 @@ export class GraphHandler {
     // Add custom events
     const graph = this.graph;
     for (const nodeClass of Object.values(LiteGraph.Nodes)) {
-      nodeClass.prototype.onKeyUp = function(e: KeyboardEvent): void{
+      nodeClass.prototype.onKeyUp = function(e: KeyboardEvent): void {
         if (e.key === 'Delete') {
           graph.remove(this);
         }
@@ -374,7 +374,7 @@ export class GraphHandler {
   }
 
   load(name?: string): void {
-    const loadNow = function (): void {
+    const loadNow = function(): void {
       // TODO
       // graph.index().then(reply => {
       //     this.graph.configure(reply.data);

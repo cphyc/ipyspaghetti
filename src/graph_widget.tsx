@@ -12,48 +12,43 @@ import { GraphHandler } from './graph';
 
 let currentId = 0;
 class GraphComponent extends React.Component {
-    private myId: string;
-    private width: number;
-    private height: number;
+  private myId: string;
+  private width: number;
+  private height: number;
 
-    constructor(props: object) {
-        super(props);
-        const myId = `graph-${currentId}`;
-        currentId++;
-        this.myId = myId;
-        this.width = window.outerWidth;
-        this.height = window.outerHeight;
-    }
+  constructor(props: object) {
+    super(props);
+    const myId = `graph-${currentId}`;
+    currentId++;
+    this.myId = myId;
+    this.width = window.outerWidth;
+    this.height = window.outerHeight;
+  }
 
-    componentDidMount() {
-        // We need to wait for the element to be added in the DOM before
-        // initializing the graph.
-        new GraphHandler(`#${this.myId}`);
-    }
+  componentDidMount() {
+    // We need to wait for the element to be added in the DOM before
+    // initializing the graph.
+    new GraphHandler(`#${this.myId}`);
+  }
 
-    render() {
-        // TODO: adapt size when parent changes
-        return (
-            <canvas
-                width={this.width}
-                height={this.height}
-                id={this.myId}
-            >
-            </canvas>
-        );
-    }
-};
+  render() {
+    // TODO: adapt size when parent changes
+    return (
+      <canvas width={this.width} height={this.height} id={this.myId}></canvas>
+    );
+  }
+}
 
 export class GraphWidget extends ReactWidget {
-    /**
-    * Constructs a new CounterWidget.
-    */
-    constructor() {
-        super();
-        this.addClass('jp-graphContainerWidget');
-    }
+  /**
+   * Constructs a new CounterWidget.
+   */
+  constructor() {
+    super();
+    this.addClass('jp-graphContainerWidget');
+  }
 
-    render(): JSX.Element {
-        return <GraphComponent />
-    }
+  render(): JSX.Element {
+    return <GraphComponent />;
+  }
 }
