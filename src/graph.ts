@@ -260,6 +260,10 @@ export class GraphHandler {
         // LiteGraph.registered_node_types = {};
         this.graph = new LGraph();
         this.canvas = new LGraphCanvas(containerId, this.graph);
+        let font = getComputedStyle(document.documentElement)
+            .getPropertyValue('--jp-ui-font-family');
+        this.canvas.title_text_font = font;
+        this.canvas.inner_text_font = font;
         this.parent_connections = new Map();
 
         this.socketConfiguration = new Map<string, Partial<INodeSlot>>();

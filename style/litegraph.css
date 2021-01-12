@@ -9,7 +9,7 @@
 }
 
 .litegraph.litecontextmenu {
-    font-family: Tahoma, sans-serif;
+    font-family:  var(--jp-ui-font-family);
     position: fixed;
     top: 100px;
     left: 100px;
@@ -45,7 +45,7 @@
 }
 
 .litegraph .litemenubar ul {
-    font-family: Tahoma, sans-serif;
+    font-family:  var(--jp-ui-font-family);
     margin: 0;
     padding: 0;
 }
@@ -163,7 +163,7 @@
 }
 
 .litegraph.litesearchbox {
-    font-family: Tahoma, sans-serif;
+    font-family:  var(--jp-ui-font-family);
     position: absolute;
     background-color: rgba(0, 0, 0, 0.5);
     padding-top: 4px;
@@ -195,7 +195,7 @@
 }
 
 .litegraph.lite-search-item {
-    font-family: Tahoma, sans-serif;
+    font-family:  var(--jp-ui-font-family);
     background-color: rgba(0, 0, 0, 0.5);
     color: white;
     padding-top: 2px;
@@ -210,7 +210,7 @@
 
 /* DIALOGs ******/
 
-.litegraph .dialog {
+.litegraph.dialog {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -225,14 +225,14 @@
     border-radius: 6px;
 }
 
-.litegraph .dialog.settings {
+.litegraph.dialog.settings {
 	left: 10px;
 	top: 10px;
 	height: calc( 100% - 20px );
 	margin: auto;
 }
 
-.litegraph .dialog .close {
+.litegraph.dialog .close {
     float: right;
 	margin: 4px;
 	margin-right: 10px;
@@ -240,26 +240,26 @@
 	font-size: 1.4em;
 }
 
-.litegraph .dialog .close:hover {
+.litegraph.dialog .close:hover {
 	color: white;
 }
 
-.litegraph .dialog .dialog-header {
+.litegraph.dialog .dialog-header {
 	color: #AAA;
 	border-bottom: 1px solid #161616;
 }
 
-.litegraph .dialog .dialog-header { height: 40px; }
-.litegraph .dialog .dialog-footer { height: 50px; padding: 10px; border-top: 1px solid #1a1a1a;}
+.litegraph.dialog .dialog-header { height: 40px; }
+.litegraph.dialog .dialog-footer { height: 50px; padding: 10px; border-top: 1px solid #1a1a1a;}
 
-.litegraph .dialog .dialog-header .dialog-title {
+.litegraph.dialog .dialog-header .dialog-title {
     font: 20px "Arial";
     margin: 4px;
     padding: 4px 10px;
     display: inline-block;
 }
 
-.litegraph .dialog .dialog-content {
+.litegraph.dialog .dialog-content {
     height: calc(100% - 90px);
     width: 100%;
 	min-height: 100px;
@@ -268,34 +268,34 @@
     /*background-color: black;*/
 }
 
-.litegraph .dialog .dialog-content h3 {
+.litegraph.dialog .dialog-content h3 {
 	margin: 10px;
 }
 
-.litegraph .dialog .dialog-content .connections {
+.litegraph.dialog .dialog-content .connections {
 	flex-direction: row;
 }
 
-.litegraph .dialog .dialog-content .connections .connections_side {
+.litegraph.dialog .dialog-content .connections .connections_side {
 	width: calc(50% - 5px);
 	min-height: 100px;
 	background-color: black;
 	display: flex;
 }
 
-.litegraph .dialog .node_type {
+.litegraph.dialog .node_type {
 	font-size: 1.2em;
 	display: block;
 	margin: 10px;
 }
 
-.litegraph .dialog .node_desc {
+.litegraph.dialog .node_desc {
 	opacity: 0.5;
 	display: block;
 	margin: 10px;
 }
 
-.litegraph .dialog .separator {
+.litegraph.dialog .separator {
 	display: block;
 	width: calc( 100% - 4px );
 	height: 1px;
@@ -305,12 +305,12 @@
 	padding: 0;
 }
 
-.litegraph .dialog .property {
+.litegraph.dialog .property {
 	margin-bottom: 2px;
 	padding: 4px;
 }
 
-.litegraph .dialog .property_name {
+.litegraph.dialog .property_name {
 	color: #737373;
     display: inline-block;
     text-align: left;
@@ -320,7 +320,7 @@
 	overflow: hidden;
 }
 
-.litegraph .dialog .property_value {
+.litegraph.dialog .property_value {
     display: inline-block;
     text-align: right;
 	color: #AAA;
@@ -334,15 +334,15 @@
 	border-radius: 3px;
 }
 
-.litegraph .dialog .property_value:hover {
+.litegraph.dialog .property_value:hover {
 	color: white;
 }
 
-.litegraph .dialog .property.boolean .property_value {
+.litegraph.dialog .property.boolean .property_value {
 	padding-right: 30px;
 }
 
-.litegraph .dialog .btn {
+.litegraph.dialog .btn {
 	border-radius: 4px;
     padding: 4px 20px;
     margin-left: 0px;
@@ -350,12 +350,12 @@
     color: #8e8e8e;
 }
 
-.litegraph .dialog .btn:hover {
+.litegraph.dialog .btn:hover {
     background-color: #111;
     color: #FFF;
 }
 
-.litegraph .dialog .btn.delete:hover {
+.litegraph.dialog .btn.delete:hover {
     background-color: #F33;
     color: black;
 }

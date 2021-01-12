@@ -1,15 +1,5 @@
 @import url('base.css');
 
-.jp-graphContainerWidget {
-  color: var(--jp-ui-font-color1);
-  background: gray;
-  font-size: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
 .jp-graphContainerWidget canvas {
   position: absolute;
   top: 0;

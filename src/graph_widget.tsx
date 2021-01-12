@@ -50,10 +50,4 @@ export class GraphWidget extends ReactWidget {
     render(): JSX.Element {
         return <GraphComponent />
     }
-
-    dispose(): void {
-        this.graph.graph.stop();
-    }
-
-    private graph: GraphHandler
 }
