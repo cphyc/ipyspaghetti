@@ -20,7 +20,11 @@ import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
 import { Menu } from '@lumino/widgets';
 
-import { ExamplePanel } from './panel';
+import { GraphWindow } from './panel';
+
+import { MyPublicAPI } from './mime';
+
+import { IMyManager, MyManager } from './manager';
 
 /**
  * The command IDs used by the console plugin.
@@ -32,9 +36,10 @@ namespace CommandIDs {
 /**
  * Initialization data for the node_editor extension.
  */
-const extension: JupyterFrontEndPlugin<void> = {
+const extension: JupyterFrontEndPlugin<IMyManager> = {
   id: 'node_editor:plugin',
   autoStart: true,
+  provides: IMyManager,
   optional: [ILauncher],
   requires: [
     ICommandPalette,
@@ -54,6 +59,7 @@ const extension: JupyterFrontEndPlugin<void> = {
  * @param mainMenu Jupyter Menu
  * @param rendermime Jupyter Render Mime Registry
  * @param translator Jupyter Translator
+ * @param restorer Jupyter Restorer
  * @param launcher [optional] Jupyter Launcher
  */
 function activate(
@@ -64,14 +70,14 @@ function activate(
   translator: ITranslator,
   restorer: ILayoutRestorer,
   launcher: ILauncher | null
-): void {
+): IMyManager {
   console.log('JupyterLab extension node_editor is activated!');
 
   const manager = app.serviceManager;
   const { commands, shell } = app;
   const category = 'Extension Examples';
   const trans = translator.load('jupyterlab');
-  let widget: MainAreaWidget<ExamplePanel>;
+  let widget: MainAreaWidget<GraphWindow>;
 
   /**
    * Creates a example panel.
@@ -80,7 +86,7 @@ function activate(
    */
   function createPanel(): void {
     if (!widget || widget.isDisposed) {
-      const content = new ExamplePanel(
+      const content = new GraphWindow(
         manager,
         rendermime,
         commands,
@@ -131,13 +137,17 @@ function activate(
     });
   }
 
-  const tracker = new WidgetTracker<MainAreaWidget<ExamplePanel>>({
+  const tracker = new WidgetTracker<MainAreaWidget<GraphWindow>>({
     namespace: 'node_editor'
   });
+
   restorer.restore(tracker, {
     command: CommandIDs.create,
     name: () => 'node_editor'
   });
+
+  MyPublicAPI.manager = new MyManager();
+  return MyPublicAPI.manager;
 }
 
 export default extension;

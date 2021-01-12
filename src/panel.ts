@@ -18,6 +18,8 @@ import {
 
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
+import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
+
 import { ServiceManager } from '@jupyterlab/services';
 import {
   ITranslator,
@@ -41,7 +43,7 @@ const PANEL_CLASS = 'jp-RovaPanel';
 /**
  * A panel with the ability to add other children.
  */
-export class ExamplePanel extends SplitPanel {
+export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
   constructor(
     manager: ServiceManager.IManager,
     rendermime: IRenderMimeRegistry,
@@ -196,10 +198,22 @@ export class ExamplePanel extends SplitPanel {
     this.dispose();
   }
 
+  /**
+   * Render ipygraph into this widget's node.
+   */
+  renderModel(model: IRenderMime.IMimeModel): Promise<void> {
+    const data = model.data[this._mimeType] as string;
+    this.node.textContent = data.slice(0, 16384);
+
+    return Promise.resolve();
+  }
+
   private _sessionContext: SessionContext;
 
   private _cell: CodeCell;
 
   private _translator: ITranslator;
   private _trans: TranslationBundle;
+
+  private _mimeType: string;
 }
