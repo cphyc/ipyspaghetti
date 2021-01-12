@@ -1,9 +1,15 @@
 import {
+  ILayoutRestorer,
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
-import { ICommandPalette } from '@jupyterlab/apputils';
+import {
+  ICommandPalette,
+  WidgetTracker,
+  MainAreaWidget
+} from '@jupyterlab/apputils';
+
 
 import { ILauncher } from '@jupyterlab/launcher';
 
@@ -33,7 +39,7 @@ const extension: JupyterFrontEndPlugin<void> = {
   id: 'node_editor:plugin',
   autoStart: true,
   optional: [ILauncher],
-  requires: [ICommandPalette, IMainMenu, IRenderMimeRegistry, ITranslator],
+  requires: [ICommandPalette, IMainMenu, IRenderMimeRegistry, ITranslator, ILayoutRestorer],
   activate: activate
 };
 
@@ -53,6 +59,7 @@ function activate(
   mainMenu: IMainMenu,
   rendermime: IRenderMimeRegistry,
   translator: ITranslator,
+  restorer: ILayoutRestorer,
   launcher: ILauncher | null
 ): void {
   console.log('JupyterLab extension node_editor is activated!');
@@ -61,18 +68,35 @@ function activate(
   const { commands, shell } = app;
   const category = 'Extension Examples';
   const trans = translator.load('jupyterlab');
-  let panel: ExamplePanel;
+  let widget: MainAreaWidget<ExamplePanel>;
 
   /**
    * Creates a example panel.
    *
    * @returns The panel
    */
-  async function createPanel(): Promise<ExamplePanel> {
-    panel = new ExamplePanel(manager, rendermime, commands, translator);
-    shell.add(panel, 'main');
-    return panel;
+   function createPanel() {
+    if (!widget || widget.isDisposed) {
+      const content = new ExamplePanel(manager, rendermime, commands, translator);
+      widget = new MainAreaWidget({content});
+      widget.id = 'node_editor';
+      widget.title.label = 'Node Editor';
+      widget.title.closable = true;
+    }
+    if (!tracker.has(widget)) {
+      // Track the state of the widget for later restoration
+      tracker.add(widget);
+    }
+    if (!widget.isAttached) {
+      // Attach the widget to the main work area if it's not there
+      app.shell.add(widget, 'main');
+    }
+    widget.content.update();
+    
+    // Activate the widget
+    shell.activateById(widget.id);
   }
+
 
   // add menu tab
   const exampleMenu = new Menu({ commands });
@@ -81,8 +105,8 @@ function activate(
 
   // add commands to registry
   commands.addCommand(CommandIDs.create, {
-    label: trans.__('Open the Kernel Output Panel'),
-    caption: trans.__('Open the Kernel Output Panel'),
+    label: trans.__('Open the Node Editor Panel'),
+    caption: trans.__('Open the Node Editor Panel'),
     execute: createPanel
   });
 
@@ -100,6 +124,14 @@ function activate(
     });
   }
 
+  let tracker = new WidgetTracker<MainAreaWidget<ExamplePanel>>({
+    namespace: 'node_editor'
+  });
+  restorer.restore(tracker, {
+    command: CommandIDs.create,
+    name: () => 'node_editor'
+  });
+
   // Request something simple on the API
   requestAPI<any>('get_example')
     .then(data => {
@@ -110,6 +142,7 @@ function activate(
         `The node_editor server extension appears to be missing.\n${reason}`
       );
     });
+
 }
 
 export default extension;
