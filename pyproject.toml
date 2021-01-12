@@ -1,3 +1,47 @@
 [build-system]
 requires = ["jupyter_packaging~=0.7.9", "jupyterlab~=3.0", "setuptools>=40.8.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+# To be kept consistent with "Code Style" section in CONTRIBUTING.rst
+[tool.black]
+line-length = 88
+target-version = ['py36', 'py37', 'py38']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+
+# To be kept consistent with "Import Formatting" section in CONTRIBUTING.rst
+[tool.isort]
+profile = "black"
+combine_as_imports = true
+known_third_party = [
+  "IPython",
+  "nose",
+  "numpy",
+  "sympy",
+  "matplotlib",
+  "unyt",
+  "git",
+  "yaml",
+  "dateutil",
+  "requests",
+  "coverage",
+  "pytest",
+  "pyx",
+  "glue",
+]
+known_first_party = ["node_editor"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
