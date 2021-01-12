@@ -78,7 +78,7 @@ function activate(
   const category = 'Extension Examples';
   const trans = translator.load('jupyterlab');
   let widget: MainAreaWidget<GraphWindow>;
-
+  const mgr = (MyPublicAPI.manager = new MyManager());
   /**
    * Creates a example panel.
    *
@@ -96,6 +96,7 @@ function activate(
       widget.id = 'node_editor';
       widget.title.label = 'Node Editor';
       widget.title.closable = true;
+      mgr.codeCell = content.codeCell;
     }
     if (!tracker.has(widget)) {
       // Track the state of the widget for later restoration
@@ -146,7 +147,6 @@ function activate(
     name: () => 'node_editor'
   });
 
-  MyPublicAPI.manager = new MyManager();
   return MyPublicAPI.manager;
 }
 

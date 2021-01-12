@@ -78,6 +78,8 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
       rendermime
     }).initializeState();
 
+    this._cellModel = cellModel;
+
     this._cell.outputHidden = false;
     this._cell.outputsScrolled = true;
 
@@ -101,8 +103,10 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
 
     editor.setOption('codeFolding', true);
     editor.setOption('lineNumbers', true);
-    cellModel.value.text =
-      "import yt\nds = yt.load('output_00080/info_00080.txt')\np = yt.SlicePlot(ds, 'x', 'density')\np";
+    cellModel.value.text = `import yt
+ds = yt.load('output_00080/info_00080.txt')
+p = yt.SlicePlot(ds, 'x', 'density')
+p`;
 
     console.log(editor.model);
 
@@ -184,6 +188,10 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
       });
   }
 
+  get codeCell(): CodeCellModel {
+    return this._cellModel;
+  }
+
   get session(): ISessionContext {
     return this._sessionContext;
   }
@@ -211,6 +219,7 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
   private _sessionContext: SessionContext;
 
   private _cell: CodeCell;
+  private _cellModel: CodeCellModel;
 
   private _translator: ITranslator;
   private _trans: TranslationBundle;

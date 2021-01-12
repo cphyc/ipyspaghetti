@@ -37,7 +37,8 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
     const data = model.data[this._mimeType] as string;
     this.node.textContent = data.slice(0, 16384);
-    console.log(this._api);
+    console.log(this._api.manager.cellValue);
+    this._api.manager.cellValue = 'prout';
     return Promise.resolve();
   }
 
