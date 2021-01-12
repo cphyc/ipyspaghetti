@@ -15,9 +15,11 @@ class GraphComponent extends React.Component {
     myId: string;
     width: number;
     height: number;
+
     componentDidMount() {
-        const graph = new GraphHandler(`#${this.myId}`);
-        console.log(graph);
+        // We need to wait for the element to be added in the DOM before
+        // initializing the graph.
+        new GraphHandler(`#${this.myId}`);
     }
 
     render() {

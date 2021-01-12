@@ -257,7 +257,8 @@ export class GraphHandler {
 
     constructor(containerId: string) {
         // Empty list of registered node types
-        // LiteGraph.registered_node_types = {};
+        LiteGraph.clearRegisteredTypes()
+
         this.graph = new LGraph();
         this.canvas = new LGraphCanvas(containerId, this.graph);
         let font = getComputedStyle(document.documentElement)
