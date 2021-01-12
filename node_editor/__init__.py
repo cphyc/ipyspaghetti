@@ -1,4 +1,3 @@
-
 import json
 import os.path as osp
 
@@ -7,21 +6,16 @@ from .handlers import setup_handlers
 
 HERE = osp.abspath(osp.dirname(__file__))
 
-with open(osp.join(HERE, 'labextension', 'package.json')) as fid:
+with open(osp.join(HERE, "labextension", "package.json")) as fid:
     data = json.load(fid)
 
 
 def _jupyter_labextension_paths():
-    return [{
-        'src': 'labextension',
-        'dest': data['name']
-    }]
+    return [{"src": "labextension", "dest": data["name"]}]
 
 
 def _jupyter_server_extension_points():
-    return [{
-        "module": "node_editor"
-    }]
+    return [{"module": "node_editor"}]
 
 
 def _load_jupyter_server_extension(server_app):
@@ -34,4 +28,3 @@ def _load_jupyter_server_extension(server_app):
     """
     setup_handlers(server_app.web_app)
     server_app.log.info("Registered HelloWorld extension at URL path /node_editor")
-
