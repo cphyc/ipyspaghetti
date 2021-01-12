@@ -12,9 +12,18 @@ import { GraphHandler } from './graph';
 
 let current_id = 0;
 class GraphComponent extends React.Component {
-    myId: string;
-    width: number;
-    height: number;
+    private myId: string;
+    private width: number;
+    private height: number;
+
+    constructor(props: object) {
+        super(props);
+        const myId = `graph-${current_id}`;
+        current_id++;
+        this.myId = myId;
+        this.width = window.outerWidth;
+        this.height = window.outerHeight;
+    }
 
     componentDidMount() {
         // We need to wait for the element to be added in the DOM before
@@ -23,12 +32,7 @@ class GraphComponent extends React.Component {
     }
 
     render() {
-        this.myId = `graph-${current_id}`;
-        current_id++;
-
         // TODO: adapt size when parent changes
-        this.width = window.innerWidth;
-        this.height = window.innerHeight;
         return (
             <canvas
                 width={this.width}
