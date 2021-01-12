@@ -6,6 +6,8 @@ import {
   MainAreaWidget
 } from '@jupyterlab/apputils';
 
+import { OutputAreaModel, SimplifiedOutputArea } from '@jupyterlab/outputarea';
+
 import { CodeCell, CodeCellModel } from '@jupyterlab/cells';
 
 import { CodeMirrorMimeTypeService } from '@jupyterlab/codemirror';
@@ -18,9 +20,7 @@ import {
 
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
-import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
-
-import { ServiceManager } from '@jupyterlab/services';
+import { ServiceManager, KernelMessage } from '@jupyterlab/services';
 import {
   ITranslator,
   nullTranslator,
@@ -43,7 +43,7 @@ const PANEL_CLASS = 'jp-RovaPanel';
 /**
  * A panel with the ability to add other children.
  */
-export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
+export class GraphWindow extends SplitPanel {
   constructor(
     manager: ServiceManager.IManager,
     rendermime: IRenderMimeRegistry,
@@ -108,8 +108,6 @@ ds = yt.load('output_00080/info_00080.txt')
 p = yt.SlicePlot(ds, 'x', 'density')
 p`;
 
-    console.log(editor.model);
-
     // Set handler's editor.
     handler.editor = editor;
 
@@ -139,11 +137,21 @@ p`;
     widget.title.label = 'React Widget';
     widget.show();
 
+    this._outputAreaModel = new OutputAreaModel();
+    this._outputArea = new SimplifiedOutputArea({
+      model: this._outputAreaModel,
+      rendermime: rendermime
+    });
+    this._outputArea.hide();
+
     // Lay out the widgets
     const box = new BoxPanel({});
     BoxPanel.setStretch(toolbar, 0);
     BoxPanel.setStretch(this._cell, 1);
-    [completer, toolbar, this._cell].forEach(w => box.addWidget(w));
+    BoxPanel.setStretch(this._outputArea, 1);
+    [completer, toolbar, this._cell, this._outputArea].forEach(w =>
+      box.addWidget(w)
+    );
 
     SplitPanel.setStretch(widget, 1);
     SplitPanel.setStretch(box, 1);
@@ -188,6 +196,17 @@ p`;
       });
   }
 
+  execute(code: string): void {
+    SimplifiedOutputArea.execute(code, this._outputArea, this._sessionContext, {
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      user_expressions: 'registry.get_nodes()'
+    })
+      .then((msg: KernelMessage.IExecuteReplyMsg) => {
+        console.log(msg);
+      })
+      .catch(reason => console.error(reason));
+  }
+
   get codeCell(): CodeCellModel {
     return this._cellModel;
   }
@@ -206,23 +225,14 @@ p`;
     this.dispose();
   }
 
-  /**
-   * Render ipygraph into this widget's node.
-   */
-  renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-    const data = model.data[this._mimeType] as string;
-    this.node.textContent = data.slice(0, 16384);
-
-    return Promise.resolve();
-  }
-
   private _sessionContext: SessionContext;
 
   private _cell: CodeCell;
   private _cellModel: CodeCellModel;
 
+  private _outputArea: SimplifiedOutputArea;
+  private _outputAreaModel: OutputAreaModel;
+
   private _translator: ITranslator;
   private _trans: TranslationBundle;
-
-  private _mimeType: string;
 }

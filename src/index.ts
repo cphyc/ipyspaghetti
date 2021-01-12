@@ -97,6 +97,7 @@ function activate(
       widget.title.label = 'Node Editor';
       widget.title.closable = true;
       mgr.codeCell = content.codeCell;
+      mgr.graphWindow = content;
     }
     if (!tracker.has(widget)) {
       // Track the state of the widget for later restoration

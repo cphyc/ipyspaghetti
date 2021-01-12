@@ -14,8 +14,6 @@ const MIME_TYPE = 'application/vnd.ipython.graph+json';
  */
 const CLASS_NAME = 'mimerenderer-ipygraph';
 
-export const WidgetInstances: Array<OutputWidget> = [];
-
 /**
  * A widget for rendering ipygraph.
  */
@@ -28,7 +26,6 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
     this._mimeType = options.mimeType;
     this.addClass(CLASS_NAME);
     this._api = api;
-    WidgetInstances.push(this);
   }
 
   /**
@@ -36,10 +33,12 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
    */
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
     const data = model.data[this._mimeType] as string;
-    this.node.textContent = data.slice(0, 16384);
+    this.node.textContent = data.substr(0, data.indexOf('___NODES = """'));
     console.log(this._api.manager.cellValue);
-    this._api.manager.cellValue = 'prout';
-    return Promise.resolve();
+    this._api.manager.execute(this.node.textContent);
+    this._api.manager.cellValue = 'registry';
+    // return Promise.resolve();
+    return;
   }
 
   private _mimeType: string;
