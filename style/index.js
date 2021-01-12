@@ -1,2 +1,3 @@
-import './base.css';
 import './index.css';
+import './litegraph-editor.css';
+import './litegraph.css';
