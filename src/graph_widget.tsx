@@ -1,4 +1,4 @@
-import { ReactWidget} from '@jupyterlab/apputils';
+import { ReactWidget } from '@jupyterlab/apputils';
 
 import React from 'react';
 
@@ -10,7 +10,7 @@ import { GraphHandler } from './graph';
  * @returns The React component
  */
 
-let current_id = 0;
+let currentId = 0;
 class GraphComponent extends React.Component {
     private myId: string;
     private width: number;
@@ -18,8 +18,8 @@ class GraphComponent extends React.Component {
 
     constructor(props: object) {
         super(props);
-        const myId = `graph-${current_id}`;
-        current_id++;
+        const myId = `graph-${currentId}`;
+        currentId++;
         this.myId = myId;
         this.width = window.outerWidth;
         this.height = window.outerHeight;

@@ -6,10 +6,7 @@ import {
   MainAreaWidget
 } from '@jupyterlab/apputils';
 
-import {
-  CodeCell,
-  CodeCellModel,
-} from '@jupyterlab/cells';
+import { CodeCell, CodeCellModel } from '@jupyterlab/cells';
 
 import { CodeMirrorMimeTypeService } from '@jupyterlab/codemirror';
 import {
@@ -19,9 +16,7 @@ import {
   KernelConnector
 } from '@jupyterlab/completer';
 
-import {
-  IRenderMimeRegistry,
-} from '@jupyterlab/rendermime';
+import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
 import { ServiceManager } from '@jupyterlab/services';
 import {
@@ -51,10 +46,10 @@ export class ExamplePanel extends SplitPanel {
     manager: ServiceManager.IManager,
     rendermime: IRenderMimeRegistry,
     commands: CommandRegistry,
-    translator?: ITranslator,
+    translator?: ITranslator
   ) {
     super({
-      orientation: "vertical"
+      orientation: 'vertical'
     });
     this._translator = translator || nullTranslator;
     this._trans = this._translator.load('jupyterlab');
@@ -71,7 +66,6 @@ export class ExamplePanel extends SplitPanel {
       name: 'Kernel Output'
     });
 
-
     /** ---------------------------------------------------------------
      * Create input code cell
      */
@@ -79,7 +73,7 @@ export class ExamplePanel extends SplitPanel {
     const mimeService = new CodeMirrorMimeTypeService();
     this._cell = new CodeCell({
       model: cellModel,
-      rendermime,
+      rendermime
     }).initializeState();
 
     this._cell.outputHidden = false;
@@ -98,12 +92,15 @@ export class ExamplePanel extends SplitPanel {
     const editor = this._cell.editor;
     const model = new CompleterModel();
     const completer = new Completer({ editor, model });
-    const connector = new KernelConnector({ session: this._sessionContext.session });
+    const connector = new KernelConnector({
+      session: this._sessionContext.session
+    });
     const handler = new CompletionHandler({ completer, connector });
 
-    editor.setOption("codeFolding", true);
-    editor.setOption("lineNumbers", true);
-    cellModel.value.text = "import yt\nds = yt.load('output_00080/info_00080.txt')\np = yt.SlicePlot(ds, 'x', 'density')"
+    editor.setOption('codeFolding', true);
+    editor.setOption('lineNumbers', true);
+    cellModel.value.text =
+      "import yt\nds = yt.load('output_00080/info_00080.txt')\np = yt.SlicePlot(ds, 'x', 'density')";
 
     console.log(editor.model);
 
@@ -116,14 +113,23 @@ export class ExamplePanel extends SplitPanel {
     // Create a toolbar for the cell.
     const toolbar = new Toolbar();
     toolbar.addItem('spacer', Toolbar.createSpacerItem());
-    toolbar.addItem('interrupt', Toolbar.createInterruptButton(this._sessionContext));
-    toolbar.addItem('restart', Toolbar.createRestartButton(this._sessionContext));
+    toolbar.addItem(
+      'interrupt',
+      Toolbar.createInterruptButton(this._sessionContext)
+    );
+    toolbar.addItem(
+      'restart',
+      Toolbar.createRestartButton(this._sessionContext)
+    );
     toolbar.addItem('name', Toolbar.createKernelNameItem(this._sessionContext));
-    toolbar.addItem('status', Toolbar.createKernelStatusItem(this._sessionContext));
+    toolbar.addItem(
+      'status',
+      Toolbar.createKernelStatusItem(this._sessionContext)
+    );
 
     // Graph widget
     const content = new GraphWidget();
-    const widget = new MainAreaWidget<GraphWidget>({content});
+    const widget = new MainAreaWidget<GraphWidget>({ content });
     widget.title.label = 'React Widget';
     widget.show();
 
@@ -133,7 +139,7 @@ export class ExamplePanel extends SplitPanel {
     BoxPanel.setStretch(this._cell, 1);
     [completer, toolbar, this._cell].forEach(w => box.addWidget(w));
 
-    SplitPanel.setStretch(widget, 1)
+    SplitPanel.setStretch(widget, 1);
     SplitPanel.setStretch(box, 1);
     // Lay out the widgets.
     this.addWidget(widget);
