@@ -5,6 +5,7 @@ import {
     LGraph,
     LGraphCanvas,
     LGraphNode,
+    LGraphGroup,
     INodeOutputSlot,
     INodeInputSlot,
     INodeSlot,
@@ -244,27 +245,29 @@ function nodeFactory(gh: GraphHandler, node: NodeSchema) {
 }
 
 export class GraphHandler {
-    graph: LGraph;
-    canvas: LGraphCanvas;
-    socketConfiguration: Map<string, Partial<INodeSlot>>;
+    private graph: LGraph;
+    private canvas: LGraphCanvas;
+    private socketConfiguration: Map<string, Partial<INodeSlot>>;
 
-    parent_connections: Map<string, string>;
+    private parent_connections: Map<string, string>;
 
-    callbacks: {[id: string] : Array<Function>} = {
+    private callbacks: {[id: string] : Array<Function>} = {
         "loaded": []
     }
-    hasLoaded: boolean = false;
+    private hasLoaded: boolean = false;
+
+    private known_types: {[id: string] : string | null} = {
+        "typing.Any": null,
+        "<class 'str'>": "string",
+        "<class 'int'>": "int",
+        "<class 'float'>": "float",
+        "<class 'bool'>": "boolean"
+    }
 
     constructor(containerId: string) {
-        // Empty list of registered node types
-        LiteGraph.clearRegisteredTypes()
+        this.setupGraph();
+        this.setupCanvas(containerId);
 
-        this.graph = new LGraph();
-        this.canvas = new LGraphCanvas(containerId, this.graph);
-        let font = getComputedStyle(document.documentElement)
-            .getPropertyValue('--jp-ui-font-family');
-        this.canvas.title_text_font = font;
-        this.canvas.inner_text_font = font;
         this.parent_connections = new Map();
 
         this.socketConfiguration = new Map<string, Partial<INodeSlot>>();
@@ -272,13 +275,43 @@ export class GraphHandler {
         this.load_components();
     }
 
-    known_types: {[id: string] : string | null} = {
-        "typing.Any": null,
-        "<class 'str'>": "string",
-        "<class 'int'>": "int",
-        "<class 'float'>": "float",
-        "<class 'bool'>": "boolean"
+    setupGraph(): void {
+        // Empty list of registered node types
+        // LiteGraph.clearRegisteredTypes()
+
+        // TODO: do not recreate a graph each time the widget is
+        // detached, simply reattach to a new canvas
+        this.graph = new LGraph();
+
+        // Reduce font size for groups
+        // @ts-ignore
+        let prev_ctor = LGraphGroup.prototype._ctor
+        // @ts-ignore
+        LGraphGroup.prototype._ctor = function(title) {
+            prev_ctor.bind(this)(title);
+            // @ts-ignore
+            this.font_size = 14;
+        }
+
+        // Add custom events
+        let graph = this.graph;
+        for (const nodeClass of Object.values(LiteGraph.Nodes)) {
+            nodeClass.prototype.onKeyUp = function(e: KeyboardEvent) {
+                if (e.key == "Delete")
+                    graph.remove(this);
+            };
+        }
+
     }
+
+    setupCanvas(containerId: string): void {
+        this.canvas = new LGraphCanvas(containerId, this.graph);
+        let font = getComputedStyle(document.documentElement)
+            .getPropertyValue('--jp-ui-font-family');
+        this.canvas.title_text_font = font;
+        this.canvas.inner_text_font = font;
+    }
+
 
     normalize_type(type: string) {
         if (type in this.known_types) {
