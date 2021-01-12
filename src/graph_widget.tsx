@@ -1,6 +1,6 @@
 import { ReactWidget } from '@jupyterlab/apputils';
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 
 import { GraphHandler } from './graph';
 
@@ -25,13 +25,13 @@ class GraphComponent extends React.Component {
     this.height = window.outerHeight;
   }
 
-  componentDidMount() {
+  componentDidMount(): void {
     // We need to wait for the element to be added in the DOM before
     // initializing the graph.
     new GraphHandler(`#${this.myId}`);
   }
 
-  render() {
+  render(): ReactNode {
     // TODO: adapt size when parent changes
     return (
       <canvas width={this.width} height={this.height} id={this.myId}></canvas>
