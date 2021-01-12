@@ -22,9 +22,10 @@ Each "node" is a function with some inputs and outputs. A script is a graph made
 - [x] Basic output back in the browser
 - [x] Lazy execution of the nodes (only the new ones are executed, or those downstream)
 - [x] Basic save/restore graph
+- [x] Integrate in JupyterLab
+- [ ] Support `ipyg` mimetype
 - [ ] Edit the nodes' code in the browser _à la_ Jupyter Notebook
 - [ ] Nice packaging
-- [ ] Implement as jupyter lab extension
 
 ## Requirements
 

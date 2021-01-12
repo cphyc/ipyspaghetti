@@ -100,7 +100,7 @@ export class ExamplePanel extends SplitPanel {
     editor.setOption('codeFolding', true);
     editor.setOption('lineNumbers', true);
     cellModel.value.text =
-      "import yt\nds = yt.load('output_00080/info_00080.txt')\np = yt.SlicePlot(ds, 'x', 'density')";
+      "import yt\nds = yt.load('output_00080/info_00080.txt')\np = yt.SlicePlot(ds, 'x', 'density')\np";
 
     console.log(editor.model);
 
