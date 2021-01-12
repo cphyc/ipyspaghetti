@@ -23,7 +23,8 @@ import { Menu } from '@lumino/widgets';
 
 import { ExamplePanel } from './panel';
 
-import { requestAPI } from './handler';
+// // @ts-ignore
+// import pyGraphExtension from "./mime";
 
 /**
  * The command IDs used by the console plugin.
@@ -131,17 +132,6 @@ function activate(
     command: CommandIDs.create,
     name: () => 'node_editor'
   });
-
-  // Request something simple on the API
-  requestAPI<any>('get_example')
-    .then(data => {
-      console.log(data);
-    })
-    .catch(reason => {
-      console.error(
-        `The node_editor server extension appears to be missing.\n${reason}`
-      );
-    });
 
 }
 
