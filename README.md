@@ -1,4 +1,4 @@
-# node_editor
+# IpySpaghetti
 
 ![Github Actions Status](https://github.com/cphyc/node_editor/workflows/Build/badge.svg)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/cphyc/node_editor/main?urlpath=lab)
 
@@ -26,6 +26,7 @@ Each "node" is a function with some inputs and outputs. A script is a graph made
 - [ ] Support `ipyg` mimetype
 - [ ] Edit the nodes' code in the browser _à la_ Jupyter Notebook
 - [ ] Nice packaging
+- [ ] Rename to IPySphaghetti
 
 ## Requirements
 
