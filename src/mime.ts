@@ -27,15 +27,17 @@ const CLASS_NAME = 'mimerenderer-ipygraph';
 /**
  * A widget for rendering ipygraph.
  */
-export class OutputWidget extends SplitPanel implements IRenderMime.IRenderer {
+export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
   /**
    * Construct a new output widget.
    */
   constructor(options: IRenderMime.IRendererOptions, api: IMyPublicAPI) {
-    super();
+    super({
+      ...options,
+      orientation: 'vertical'
+    });
     this._mimeType = options.mimeType;
     this.addClass(CLASS_NAME);
-    this._api = api;
 
     const rendermime = api.manager.rendermime;
     const sessions = api.manager.manager.sessions;
@@ -110,6 +112,9 @@ p`;
     // Lay out the widgets.
     this.addWidget(widget);
     this.addWidget(box);
+
+    // Wire code editor
+    this._cell = cell;
   }
 
   /**
@@ -117,16 +122,19 @@ p`;
    */
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
     const data = model.data[this._mimeType] as string;
-    this.node.textContent = data.substr(0, data.indexOf('___NODES = """'));
-    console.log(this._api.manager.cellValue);
-    this._api.manager.execute(this.node.textContent);
-    this._api.manager.cellValue = 'registry';
+    this._cell.model.value.text = data.substr(
+      0,
+      data.indexOf('___NODES = """')
+    );
+    // this._api.manager.execute(this.node.textContent);
+    // this._api.manager.cellValue = 'registry';
     // return Promise.resolve();
     return;
   }
 
   private _mimeType: string;
-  private _api: IMyPublicAPI;
+
+  private _cell: CodeCell;
 }
 
 export interface IMyPublicAPI {
@@ -146,7 +154,7 @@ export const MyPublicAPI: IMyPublicAPI = {
 export const rendererFactory: IRenderMime.IRendererFactory = {
   safe: true,
   mimeTypes: [MIME_TYPE],
-  createRenderer: options => new OutputWidget(options, MyPublicAPI)
+  createRenderer: options => new GraphWindow(options, MyPublicAPI)
 };
 
 /**

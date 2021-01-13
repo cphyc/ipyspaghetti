@@ -20,9 +20,7 @@ import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
 import { Menu } from '@lumino/widgets';
 
-import { GraphWindow } from './panel';
-
-import { MyPublicAPI } from './mime';
+import { MyPublicAPI, GraphWindow } from './mime';
 
 import { IMyManager, MyManager } from './manager';
 
@@ -74,10 +72,10 @@ function activate(
   console.log('JupyterLab extension node_editor is activated!');
 
   const manager = app.serviceManager;
-  const { commands, shell } = app;
+  const { commands } = app;
   const category = 'Extension Examples';
   const trans = translator.load('jupyterlab');
-  let widget: MainAreaWidget<GraphWindow>;
+  // let widget: MainAreaWidget<GraphWindow>;
   const mgr = new MyManager(manager, rendermime);
   MyPublicAPI.manager = mgr;
   /**
@@ -86,33 +84,31 @@ function activate(
    * @returns The panel
    */
   function createPanel(): void {
-    if (!widget || widget.isDisposed) {
-      const content = new GraphWindow(
-        manager,
-        rendermime,
-        commands,
-        translator
-      );
-      widget = new MainAreaWidget({ content });
-      widget.id = 'node_editor';
-      widget.title.label = 'Node Editor';
-      widget.title.closable = true;
-      mgr.codeCell = content.codeCell;
-      mgr.graphWindow = content;
-    }
-    if (!tracker.has(widget)) {
-      // Track the state of the widget for later restoration
-      tracker.add(widget);
-    }
-    if (!widget.isAttached) {
-      // Attach the widget to the main work area if it's not there
-      app.shell.add(widget, 'main');
-    }
-    widget.content.update();
-
-    // Activate the widget
-    shell.activateById(widget.id);
   }
+  //   if (!widget || widget.isDisposed) {
+  //     const content = new GraphWindow({
+  //       mimeType:
+  //     }, MyPublicAPI);
+  //     widget = new MainAreaWidget({ content });
+  //     widget.id = 'node_editor';
+  //     widget.title.label = 'Node Editor';
+  //     widget.title.closable = true;
+  //     // mgr.codeCell = content.codeCell;
+  //     // mgr.graphWindow = content;
+  //   }
+  //   if (!tracker.has(widget)) {
+  //     // Track the state of the widget for later restoration
+  //     tracker.add(widget);
+  //   }
+  //   if (!widget.isAttached) {
+  //     // Attach the widget to the main work area if it's not there
+  //     app.shell.add(widget, 'main');
+  //   }
+  //   widget.content.update();
+
+  //   // Activate the widget
+  //   shell.activateById(widget.id);
+  // }
 
   // add menu tab
   const exampleMenu = new Menu({ commands });
