@@ -1,0 +1,74 @@
+from typing import Any, Tuple
+
+import yt
+from yt.data_objects.static_output import Dataset
+from yt.visualization.plot_window import PlotWindow
+
+from node_editor.graph import register_node, registry
+
+@register_node
+def load_dataset(
+    path: str = "/home/ccc/Documents/prog/yt-data/output_00080/info_00080.txt",
+) -> Dataset:
+    ds = yt.load(path)
+    return ds
+
+
+@register_node
+def load_sample(path: str, specific_file: str = None) -> Dataset:
+    ds = yt.load_sample(path, specific_file)
+    return ds
+
+
+@register_node
+def switch(v1: Any, v2: Any, choice: bool) -> Any:
+    if choice:
+        return v1
+    else:
+        return v2
+
+
+class HTMLTuple(tuple):
+    def _repr_html_(self):
+        ret = []
+        for e in self:
+            try:
+                ret.append(e._repr_html_())
+            except AttributeError:
+                ret.append(repr(e))
+        html = '<div style="display:inline-block">'
+        html += '</div><div style="display:inline-block">'.join(ret)
+        html += "</div>"
+        return html
+
+
+@register_node
+def pair_to_tuple(a: Any, b: Any) -> Tuple[Any, Any]:
+    return HTMLTuple((a, b))
+
+
+@register_node
+def projection_plot(
+    ds: Dataset, axis: str = "x", field: Tuple[str, str] = ("gas", "density")
+) -> PlotWindow:
+    p = yt.ProjectionPlot(ds, axis, field)
+    return p
+
+
+@register_node
+def save_plot(p: PlotWindow, path: str) -> PlotWindow:
+    p.save(path)
+    return p
+
+
+@register_node
+def show(v: Any):
+    try:
+        ret = v._repr_html_()
+    except AttributeError:
+        ret = repr(v)
+    print(ret)
+
+___NODES = """
+{"last_node_id": 25, "last_link_id": 50, "nodes": [{"id": 11, "type": "basic/string", "pos": [80.38118980943925, 271.10983539375746], "size": [210, 38.58369082856075], "flags": {"collapsed": true}, "order": 0, "mode": 0, "outputs": [{"name": "", "type": "string", "links": [13]}], "properties": {"value": "gas"}}, {"id": 10, "type": "basic/string", "pos": [81.38118980943925, 307.1098353937576], "size": [210, 38.58369082856075], "flags": {"collapsed": true}, "order": 1, "mode": 0, "outputs": [{"name": "", "type": "string", "links": [14]}], "properties": {"value": "temperature"}}, {"id": 6, "type": "basic/string", "pos": [252.1663137763815, 193.2172734102862], "size": [210, 38.58369082856075], "flags": {"collapsed": true}, "order": 2, "mode": 0, "outputs": [{"name": "", "type": "string", "links": [22]}], "properties": {"value": "x"}}, {"id": 13, "type": "basic/string", "pos": [70.38118980943926, 393.1098353937576], "size": [210, 38.58369082856075], "flags": {"collapsed": true}, "order": 3, "mode": 0, "outputs": [{"name": "", "type": "string", "links": [19]}], "properties": {"value": "pressure"}}, {"id": 18, "type": "basic/string", "pos": [-1, 105], "size": [180, 30], "flags": {"collapsed": false}, "order": 4, "mode": 0, "outputs": [{"name": "", "type": "string", "links": []}], "properties": {"value": "ramses_rt_00088/output_00088/info_00088.txt"}}, {"id": 17, "type": "basic/string", "pos": [0, 37], "size": [180, 30], "flags": {"collapsed": false}, "order": 5, "mode": 0, "outputs": [{"name": "", "type": "string", "links": [35]}], "properties": {"value": "output_00080/info_00080.txt"}}, {"id": 15, "type": "basic/string", "pos": [92.16631377638139, 355.11727341028626], "size": [180, 30], "flags": {"collapsed": true}, "order": 6, "mode": 0, "outputs": [{"name": "", "type": "string", "links": [21]}], "properties": {"value": "gas"}}, {"id": 1, "type": "mynodes/load_dataset", "pos": {"0": 244, "1": 53, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0, "8": 0, "9": 0}, "size": {"0": 140, "1": 26}, "flags": {}, "order": 8, "mode": 0, "inputs": [{"name": "path", "type": "string", "link": 35, "color_on": "#EBFF66", "color_off": "#E7FF4D", "shape": 1}], "outputs": [{"name": "output", "type": "<class 'yt.data_objects.static_output.Dataset'>", "links": [1], "color_on": "#66F2FF", "color_off": "#4DF0FF", "shape": 4}], "properties": {"state": 1, "count": 0, "previous_input": ["output_00080/info_00080.txt"], "type": 1}, "boxcolor": "green"}, {"id": 2, "type": "mynodes/projection_plot", "pos": {"0": 553, "1": 96, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0, "8": 0, "9": 0}, "size": {"0": 140, "1": 66}, "flags": {"collapsed": false}, "order": 10, "mode": 0, "inputs": [{"name": "ds", "type": "<class 'yt.data_objects.static_output.Dataset'>", "link": 1, "color_on": "#66F2FF", "color_off": "#4DF0FF", "shape": 4}, {"name": "axis", "type": "string", "link": 22, "color_on": "#EBFF66", "color_off": "#E7FF4D", "shape": 1}, {"name": "field", "type": "<class 'tuple'>[(typing.Any, typing.Any)])", "link": 50, "color_on": "#FFDB66", "color_off": "#FFD54D", "shape": 1}], "outputs": [{"name": "output", "type": "<class 'yt.visualization.plot_window.PlotWindow'>", "links": [48], "color_on": "#F5FF66", "color_off": "#F3FF4D", "shape": 4}], "properties": {"state": 1, "count": 0, "previous_input": [1, "x", 1], "type": 1}, "boxcolor": "green"}, {"id": 12, "type": "mynodes/pair_to_tuple", "pos": {"0": 260, "1": 250, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0, "8": 0, "9": 0}, "size": {"0": 140, "1": 46}, "flags": {"collapsed": false}, "order": 7, "mode": 0, "inputs": [{"name": "a", "type": 0, "link": 13, "color_on": "#FFA166", "color_off": "#FF914D", "shape": 4}, {"name": "b", "type": 0, "link": 14, "color_on": "#FFA166", "color_off": "#FF914D", "shape": 4}], "outputs": [{"name": "output", "type": "<class 'tuple'>[(typing.Any, typing.Any)])", "links": [], "color_on": "#FFDB66", "color_off": "#FFD54D", "shape": 4}], "properties": {"state": 1, "count": 0, "previous_input": ["gas", "temperature"], "type": 1}, "boxcolor": "green"}, {"id": 14, "type": "mynodes/pair_to_tuple", "pos": {"0": 266.1662902832031, "1": 344.11724853515625, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0, "8": 0, "9": 0}, "size": {"0": 140, "1": 46}, "flags": {"collapsed": false}, "order": 9, "mode": 0, "inputs": [{"name": "a", "type": 0, "link": 21, "color_on": "#FFA166", "color_off": "#FF914D", "shape": 4}, {"name": "b", "type": 0, "link": 19, "color_on": "#FFA166", "color_off": "#FF914D", "shape": 4}], "outputs": [{"name": "output", "type": "<class 'tuple'>[(typing.Any, typing.Any)])", "links": [50], "color_on": "#FFDB66", "color_off": "#FFD54D", "shape": 4}], "properties": {"state": 1, "count": 0, "previous_input": ["gas", "pressure"], "type": 1}, "boxcolor": "green"}, {"id": 25, "type": "mynodes/show", "pos": {"0": 788, "1": 98, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0, "8": 0, "9": 0}, "size": {"0": 140, "1": 26}, "flags": {}, "order": 11, "mode": 0, "inputs": [{"name": "v", "type": 0, "link": 48, "color_on": "#FFA166", "color_off": "#FF914D", "shape": 4}], "outputs": [], "properties": {"state": 1, "count": 0, "previous_input": [1], "type": 1}, "boxcolor": "green"}], "links": [[1, 1, 0, 2, 0, "<class 'yt.data_objects.static_output.Dataset'>"], [13, 11, 0, 12, 0, 0], [14, 10, 0, 12, 1, 0], [19, 13, 0, 14, 1, 0], [21, 15, 0, 14, 0, 0], [22, 6, 0, 2, 1, "string"], [35, 17, 0, 1, 0, "string"], [48, 2, 0, 25, 0, 0], [50, 14, 0, 2, 2, "<class 'tuple'>[(typing.Any, typing.Any)])"]], "groups": [], "config": {}, "extra": {}, "version": 0.4}%
+"""
