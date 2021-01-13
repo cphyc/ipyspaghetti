@@ -78,7 +78,8 @@ function activate(
   const category = 'Extension Examples';
   const trans = translator.load('jupyterlab');
   let widget: MainAreaWidget<GraphWindow>;
-  const mgr = (MyPublicAPI.manager = new MyManager());
+  const mgr = new MyManager(manager, rendermime);
+  MyPublicAPI.manager = mgr;
   /**
    * Creates a example panel.
    *

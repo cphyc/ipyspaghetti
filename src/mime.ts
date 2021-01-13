@@ -1,6 +1,16 @@
+import { MainAreaWidget, SessionContext, Toolbar } from '@jupyterlab/apputils';
+import { CodeCell, CodeCellModel } from '@jupyterlab/cells';
+import { CodeMirrorMimeTypeService } from '@jupyterlab/codemirror';
+import {
+  Completer,
+  CompleterModel,
+  CompletionHandler,
+  KernelConnector
+} from '@jupyterlab/completer';
 import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
 
-import { Widget } from '@lumino/widgets';
+import { BoxPanel, SplitPanel } from '@lumino/widgets';
+import { GraphWidget } from './graph_widget';
 
 import { IMyManager } from './manager';
 
@@ -17,7 +27,7 @@ const CLASS_NAME = 'mimerenderer-ipygraph';
 /**
  * A widget for rendering ipygraph.
  */
-export class OutputWidget extends Widget implements IRenderMime.IRenderer {
+export class OutputWidget extends SplitPanel implements IRenderMime.IRenderer {
   /**
    * Construct a new output widget.
    */
@@ -26,6 +36,80 @@ export class OutputWidget extends Widget implements IRenderMime.IRenderer {
     this._mimeType = options.mimeType;
     this.addClass(CLASS_NAME);
     this._api = api;
+
+    const rendermime = api.manager.rendermime;
+    const sessions = api.manager.manager.sessions;
+    const kernelspecs = api.manager.manager.kernelspecs;
+
+    const sessionContext = new SessionContext({
+      sessionManager: sessions,
+      specsManager: kernelspecs,
+      name: 'Kernel Output'
+    });
+
+    const cellModel = new CodeCellModel({});
+    const mimeService = new CodeMirrorMimeTypeService();
+    const cell = new CodeCell({
+      model: cellModel,
+      rendermime
+    }).initializeState();
+    cell.outputHidden = false;
+    cell.outputsScrolled = true;
+
+    sessionContext.kernelChanged.connect(() => {
+      void sessionContext.session?.kernel?.info.then(info => {
+        const lang = info.language_info;
+        const mimeType = mimeService.getMimeTypeByLanguage(lang);
+        cellModel.mimeType = mimeType;
+      });
+    });
+
+    const editor = cell.editor;
+    const model = new CompleterModel();
+    const completer = new Completer({ editor, model });
+    const connector = new KernelConnector({
+      session: sessionContext.session
+    });
+    const handler = new CompletionHandler({ completer, connector });
+
+    editor.setOption('codeFolding', true);
+    editor.setOption('lineNumbers', true);
+    cellModel.value.text = `import yt
+ds = yt.load('output_00080/info_00080.txt')
+p = yt.SlicePlot(ds, 'x', 'density')
+p`;
+
+    // Set handler's editor.
+    handler.editor = editor;
+
+    // Hide the widget when it first loads.
+    completer.hide();
+
+    // Create a toolbar for the cell.
+    const toolbar = new Toolbar();
+    toolbar.addItem('spacer', Toolbar.createSpacerItem());
+    toolbar.addItem('interrupt', Toolbar.createInterruptButton(sessionContext));
+    toolbar.addItem('restart', Toolbar.createRestartButton(sessionContext));
+    toolbar.addItem('name', Toolbar.createKernelNameItem(sessionContext));
+    toolbar.addItem('status', Toolbar.createKernelStatusItem(sessionContext));
+
+    // Graph widget
+    const content = new GraphWidget();
+    const widget = new MainAreaWidget<GraphWidget>({ content });
+    widget.title.label = 'React Widget';
+    widget.show();
+
+    // Lay out the widgets
+    const box = new BoxPanel({});
+    BoxPanel.setStretch(toolbar, 0);
+    BoxPanel.setStretch(cell, 1);
+    [completer, toolbar, cell].forEach(w => box.addWidget(w));
+
+    SplitPanel.setStretch(widget, 1);
+    SplitPanel.setStretch(box, 1);
+    // Lay out the widgets.
+    this.addWidget(widget);
+    this.addWidget(box);
   }
 
   /**
