@@ -23,12 +23,16 @@ class GraphComponent extends React.Component {
     this.myId = myId;
     this.width = window.outerWidth;
     this.height = window.outerHeight;
+
   }
 
   componentDidMount(): void {
     // We need to wait for the element to be added in the DOM before
     // initializing the graph.
-    new GraphHandler(`#${this.myId}`);
+    const graph = new GraphHandler(`#${this.myId}`);
+    // TODO: fix
+    // @ts-ignore
+    this.props.setGraph(graph);
   }
 
   render(): ReactNode {
@@ -47,7 +51,19 @@ export class GraphWidget extends ReactWidget {
     this.addClass('jp-graphContainerWidget');
   }
 
-  render(): JSX.Element {
-    return <GraphComponent />;
+  setGraph(g: GraphHandler): void {
+    this._graph = g;
   }
+
+  get graph(): GraphHandler {
+    return this._graph;
+  }
+
+  render(): JSX.Element {
+    // TODO: fix this
+    // @ts-ignore
+    return <GraphComponent setGraph={this.setGraph.bind(this)} />;
+  }
+
+  private _graph: GraphHandler;
 }

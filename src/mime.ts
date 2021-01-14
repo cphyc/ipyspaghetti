@@ -102,7 +102,7 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     const icon = new ToolbarButton({
       className: 'jp-DebuggerBugButton',
       label: 'Reload nodes',
-      onClick: this.reloadNodes
+      onClick: this.reloadNodes.bind(this)
     });
     const toolbar = new Toolbar();
     toolbar.addItem('reload-nodes', icon);
@@ -153,8 +153,15 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
   }
 
   private async reloadNodes(): Promise<void> {
-    await execute('registry.get_nodes()', this._output, this._sessionContext);
-    this._graphWidget;
+    // TODO: less ugly!
+    await execute(
+      'print(registry.get_nodes_as_json())',
+      this._output,
+      this._sessionContext
+    );
+    const graph = this._graphWidget.graph;
+    graph.createComponents(this._output.graphData);
+    graph.loadGraph(this._graphData);
   }
 
   /**
@@ -164,13 +171,9 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     const data = model.data[this._mimeType] as string;
     const magicString = '___NODES = """';
     const splitPoint = data.indexOf(magicString);
+    const endPoint = data.lastIndexOf('"""');
     this._cell.model.value.text = data.substr(0, splitPoint);
-    const graphStr = data.substr(
-      splitPoint + magicString.length,
-      data.length - 3
-    );
-    console.log(graphStr);
-    // this._graphWidget.graph.configure(graphStr);
+    this._graphData = data.substring(splitPoint + magicString.length, endPoint);
     return;
   }
 
@@ -183,6 +186,8 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
   private _output: OutputArea2;
 
   private _graphWidget: GraphWidget;
+
+  private _graphData: string;
 }
 
 export interface IMyPublicAPI {

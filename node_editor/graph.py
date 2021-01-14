@@ -4,6 +4,8 @@ from types import FunctionType
 from typing import Callable, Dict
 from IPython.display import display, JSON
 
+import json
+
 import typing_utils
 from traitlets.traitlets import Bool
 
@@ -69,6 +71,9 @@ class NodeRegistry:
 
     def get_nodes(self) -> Dict[str, Node]:
         return self.nodes
+
+    def get_nodes_as_json(self) -> str:
+        return json.dumps(self.get_nodes())
 
     @staticmethod
     def _resolve_parent(

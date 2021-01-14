@@ -279,8 +279,6 @@ export class GraphHandler {
     this.parentConnections = new Map();
 
     this.socketConfiguration = new Map<string, Partial<INodeSlot>>();
-
-    this.loadComponents();
   }
 
   setupGraph(): void {
@@ -334,14 +332,10 @@ export class GraphHandler {
     }
   }
 
-  async loadComponents(): Promise<void> {
-    // TODO
-    // let all_nodes: Array<NodeSchema> = (await nodes.index()).data;
-    // let ret = await connections.index();
-    // for (const [key, value] of Object.entries(ret.data)) {
-    //     this.parent_connections.set(key, <string> value);
-    // }
-    // all_nodes.forEach((node: NodeSchema) => nodeFactory(this, node));
+  loadComponents(allNodes: any): void {
+    for (const node of Object.values(allNodes)) {
+      nodeFactory(this, node);
+    }
 
     this.hasLoaded = true;
     while (this.callbacks['loaded'].length > 0) {
@@ -350,7 +344,6 @@ export class GraphHandler {
   }
 
   on(event: string, callback: Function): void {
-    // @ts-ignore
     this.callbacks[event].push(callback);
   }
 
@@ -387,7 +380,12 @@ export class GraphHandler {
     }
   }
 
-  configure(data: string): void {
+  createComponents(data: string): void {
+    const conf = JSON.parse(data);
+    this.loadComponents(conf);
+  }
+
+  loadGraph(data: string): void {
     const conf = JSON.parse(data);
     this.graph.configure(conf);
   }
