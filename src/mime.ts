@@ -9,6 +9,7 @@ import {
 import { CodeCell, CodeCellModel } from '@jupyterlab/cells';
 
 import { CodeMirrorMimeTypeService } from '@jupyterlab/codemirror';
+import { OutputArea } from '@jupyterlab/outputarea';
 
 // import { KernelConnector } from '@jupyterlab/completer';
 
@@ -71,6 +72,7 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     cell.outputArea.show();
 
     this._output = cloneOutput(cell, rendermime);
+    this._output.show();
 
     sessionContext.kernelChanged.connect(() => {
       void sessionContext.session?.kernel?.info.then(info => {
@@ -99,13 +101,19 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     editor.setOption('lineNumbers', true);
 
     // Create a toolbar for the cell.
-    const icon = new ToolbarButton({
+    const reloadNodes = new ToolbarButton({
       className: 'jp-DebuggerBugButton',
       label: 'Reload nodes',
       onClick: this.reloadNodes.bind(this)
     });
+    const runGraph = new ToolbarButton({
+      className: 'jp-DebuggerBugButton',
+      label: 'Run Graph',
+      onClick: this.runGraph.bind(this)
+    });
     const toolbar = new Toolbar();
-    toolbar.addItem('reload-nodes', icon);
+    toolbar.addItem('reload-nodes', reloadNodes);
+    toolbar.addItem('run-graph', runGraph);
     toolbar.addItem('spacer', Toolbar.createSpacerItem());
     toolbar.addItem('interrupt', Toolbar.createInterruptButton(sessionContext));
     toolbar.addItem('restart', Toolbar.createRestartButton(sessionContext));
@@ -113,7 +121,34 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     toolbar.addItem('status', Toolbar.createKernelStatusItem(sessionContext));
 
     // Graph widget
-    const content = new GraphWidget();
+    const content = new GraphWidget((id: number, props: any) => {
+      // Build args
+      const args = props.parameters
+      .map((param: any) => {
+        const val = param.data;
+
+        if (param.data === null) {
+          return `${param.name}=__out_${param.node_id}`;
+        } else {
+          switch (typeof val) {
+              case 'number':
+                return `${param.name}=${param.data}`;
+              case 'boolean':
+                return `${param.name}=${param.data ? 'True' : 'False'}`;
+              case 'string':
+              default:
+                return `${param.name}="${param.data}"`;
+          }
+        }
+      })
+      .join(', ');
+      // Build code
+      const code = `__out_${id} = registry.nodes["${props.info.name}"](${args})\n__out_${id}`;
+      console.debug(`Executing ${code}`);
+      cell.model.value.text = code;
+
+      return OutputArea.execute(code, cell.outputArea, this._sessionContext);
+    });
     const graphWidget = new MainAreaWidget<GraphWidget>({ content });
     content.show();
     graphWidget.show();
@@ -128,6 +163,7 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     this.addWidget(toolbar);
     this.addWidget(graphWidget);
     this.addWidget(cell);
+    this.addWidget(this._output);
 
     // Wire code editor
     this._cell = cell;
@@ -162,6 +198,10 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     const graph = this._graphWidget.graph;
     graph.createComponents(this._output.graphData);
     graph.loadGraph(this._graphData);
+  }
+
+  private runGraph(): void {
+    this._graphWidget.graph.graph.runStep();
   }
 
   /**

@@ -150,29 +150,28 @@ function nodeFactory(gh: GraphHandler, node: NodeSchema) {
       this.setState(NodeState.RUNNING);
 
       // Gather inputs
-      // TODO
-      // let parameters = this.inputs
-      // .map((input) => {
-      //     if (!input.link) return;
+      const parameters = this.inputs
+        .map(input => {
+          if (!input.link) return;
 
-      //     let link = gh.graph.links[input.link];
-      //     let from_node = gh.graph.getNodeById(link.origin_id);
-      //     if (from_node.properties["type"] == PYTHON_NODE) {
-      //         return {
-      //             name: input.name,
-      //             node_id: from_node.id,
-      //             socket: link.origin_slot,
-      //             data: null
-      //         }
-      //     } else {
-      //         return {
-      //             name: input.name,
-      //             node_id: from_node.id,
-      //             socket: link.origin_slot,
-      //             data: from_node.getOutputData(link.origin_slot)
-      //         }
-      //     }
-      // }).filter(elem => elem);
+          const link = gh.graph.links[input.link];
+          const from_node = gh.graph.getNodeById(link.origin_id);
+          if (from_node.properties["type"] == PYTHON_NODE) {
+              return {
+                  name: input.name,
+                  node_id: from_node.id,
+                  socket: link.origin_slot,
+                  data: null
+              }
+          } else {
+              return {
+                  name: input.name,
+                  node_id: from_node.id,
+                  socket: link.origin_slot,
+                  data: from_node.getOutputData(link.origin_slot)
+              }
+          }
+      }).filter(elem => elem);
 
       // Set previous input data
       const inputData = this.inputs.map((input, index) => {
@@ -188,7 +187,18 @@ function nodeFactory(gh: GraphHandler, node: NodeSchema) {
         this.setOutputData(iout, val + 1);
       }
 
-      // TODO
+      gh.executeCell(this.id, {
+        id: this.id,
+        info: node,
+        parameters: parameters
+      })
+        .then((ret: any) => {
+        console.debug("executed", ret);
+        })
+        .catch((err: any) => {
+        console.error("Error!", err);
+      });
+
       // exec.update(this.id, {id: this.id, info: node, parameters: parameters})
       // .then(reply => {
       //     this.setState(NodeState.CLEAN);
@@ -253,7 +263,7 @@ function nodeFactory(gh: GraphHandler, node: NodeSchema) {
 }
 
 export class GraphHandler {
-  private graph: LGraph;
+  private _graph: LGraph;
   private canvas: LGraphCanvas;
   private socketConfiguration: Map<string, Partial<INodeSlot>>;
 
@@ -272,13 +282,16 @@ export class GraphHandler {
     "<class 'bool'>": 'boolean'
   };
 
-  constructor(containerId: string) {
+  executeCell: Function;
+
+  constructor(containerId: string, executeCell: Function) {
     this.setupGraph();
     this.setupCanvas(containerId);
 
     this.parentConnections = new Map();
-
     this.socketConfiguration = new Map<string, Partial<INodeSlot>>();
+
+    this.executeCell = executeCell;
   }
 
   setupGraph(): void {
@@ -287,7 +300,7 @@ export class GraphHandler {
 
     // TODO: do not recreate a graph each time the widget is
     // detached, simply reattach to a new canvas
-    this.graph = new LGraph();
+    this._graph = new LGraph();
 
     // Reduce font size for groups
     // @ts-ignore
@@ -301,7 +314,7 @@ export class GraphHandler {
     };
 
     // Add custom events
-    const graph = this.graph;
+    const graph = this._graph;
     for (const nodeClass of Object.values(LiteGraph.Nodes)) {
       nodeClass.prototype.onKeyUp = function(e: KeyboardEvent): void {
         if (e.key === 'Delete') {
@@ -312,7 +325,7 @@ export class GraphHandler {
   }
 
   setupCanvas(containerId: string): void {
-    this.canvas = new LGraphCanvas(containerId, this.graph);
+    this.canvas = new LGraphCanvas(containerId, this._graph);
     const font = getComputedStyle(document.documentElement).getPropertyValue(
       '--jp-ui-font-family'
     );
@@ -387,6 +400,10 @@ export class GraphHandler {
 
   loadGraph(data: string): void {
     const conf = JSON.parse(data);
-    this.graph.configure(conf);
+    this._graph.configure(conf);
+  }
+
+  get graph(): LGraph {
+    return this._graph;
   }
 }
