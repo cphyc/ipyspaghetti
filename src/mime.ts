@@ -1,10 +1,16 @@
-import { MainAreaWidget, SessionContext, Toolbar, ToolbarButton } from '@jupyterlab/apputils';
+import {
+  MainAreaWidget,
+  SessionContext,
+  Toolbar,
+  ToolbarButton,
+  sessionContextDialogs
+} from '@jupyterlab/apputils';
 
 import { CodeCell, CodeCellModel } from '@jupyterlab/cells';
 
 import { CodeMirrorMimeTypeService } from '@jupyterlab/codemirror';
 
-import { KernelConnector } from '@jupyterlab/completer';
+// import { KernelConnector } from '@jupyterlab/completer';
 
 import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
 
@@ -13,6 +19,8 @@ import { SplitPanel } from '@lumino/widgets';
 import { GraphWidget } from './graph_widget';
 
 import { IMyManager } from './manager';
+
+import { execute, cloneOutput, OutputArea2 } from './utils';
 
 /**
  * The default mime type for the extension.
@@ -43,13 +51,14 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     const rendermime = api.manager.rendermime;
     const sessions = api.manager.manager.sessions;
     const kernelspecs = api.manager.manager.kernelspecs;
-    const completionManager = api.manager.completionManager;
 
     const sessionContext = new SessionContext({
       sessionManager: sessions,
       specsManager: kernelspecs,
-      name: 'Kernel Output'
+      name: 'IPyGraph Kernel'
     });
+
+    this._sessionContext = sessionContext;
 
     const cellModel = new CodeCellModel({});
     const mimeService = new CodeMirrorMimeTypeService();
@@ -59,6 +68,9 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     }).initializeState();
     cell.outputHidden = false;
     cell.outputsScrolled = true;
+    cell.outputArea.show();
+
+    this._output = cloneOutput(cell, rendermime);
 
     sessionContext.kernelChanged.connect(() => {
       void sessionContext.session?.kernel?.info.then(info => {
@@ -67,16 +79,18 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
         cellModel.mimeType = mimeType;
       });
 
-      const connector = new KernelConnector({
-        session: sessionContext.session
-      });
 
-      const ret = completionManager.register({
-        connector,
-        editor: cell.editor,
-        parent: this
-      });
-      console.log(ret);
+      // // TODO: doesn't work
+      // const completionManager = api.manager.completionManager;
+      // const connector = new KernelConnector({
+      //   session: sessionContext.session
+      // });
+
+      // completionManager.register({
+      //   connector,
+      //   editor: cell.editor,
+      //   parent: this
+      // });
     });
 
     const editor = cell.editor;
@@ -87,13 +101,11 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     // Create a toolbar for the cell.
     const icon = new ToolbarButton({
       className: 'jp-DebuggerBugButton',
-      label: 'Click me!',
-      onClick: (): void => {
-        cell.outputArea.
-      }
+      label: 'Reload nodes',
+      onClick: this.reloadNodes
     });
     const toolbar = new Toolbar();
-    toolbar.addItem('clickme', icon);
+    toolbar.addItem('reload-nodes', icon);
     toolbar.addItem('spacer', Toolbar.createSpacerItem());
     toolbar.addItem('interrupt', Toolbar.createInterruptButton(sessionContext));
     toolbar.addItem('restart', Toolbar.createRestartButton(sessionContext));
@@ -103,7 +115,10 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     // Graph widget
     const content = new GraphWidget();
     const graphWidget = new MainAreaWidget<GraphWidget>({ content });
+    content.show();
     graphWidget.show();
+
+    this._graphWidget = content;
 
     // Lay out the widgets
     cell.addClass(EDITOR_CLASS_NAME);
@@ -116,6 +131,30 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
 
     // Wire code editor
     this._cell = cell;
+
+    void sessionContext
+      .initialize()
+      .then(async value => {
+        if (value) {
+          await sessionContextDialogs.selectKernel(sessionContext);
+        }
+        await execute(
+          this._cell.model.value.text,
+          this._output,
+          this._sessionContext
+        );
+        await this.reloadNodes();
+      })
+      .catch(reason => {
+        console.error(
+          `Failed to initialize the session in ExamplePanel.\n${reason}`
+        );
+      });
+  }
+
+  private async reloadNodes(): Promise<void> {
+    await execute('registry.get_nodes()', this._output, this._sessionContext);
+    this._graphWidget;
   }
 
   /**
@@ -123,19 +162,27 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
    */
   renderModel(model: IRenderMime.IMimeModel): Promise<void> {
     const data = model.data[this._mimeType] as string;
-    this._cell.model.value.text = data.substr(
-      0,
-      data.indexOf('___NODES = """')
+    const magicString = '___NODES = """';
+    const splitPoint = data.indexOf(magicString);
+    this._cell.model.value.text = data.substr(0, splitPoint);
+    const graphStr = data.substr(
+      splitPoint + magicString.length,
+      data.length - 3
     );
-    // this._api.manager.execute(this.node.textContent);
-    // this._api.manager.cellValue = 'registry';
-    // return Promise.resolve();
+    console.log(graphStr);
+    // this._graphWidget.graph.configure(graphStr);
     return;
   }
 
   private _mimeType: string;
 
   private _cell: CodeCell;
+
+  private _sessionContext: SessionContext;
+
+  private _output: OutputArea2;
+
+  private _graphWidget: GraphWidget;
 }
 
 export interface IMyPublicAPI {

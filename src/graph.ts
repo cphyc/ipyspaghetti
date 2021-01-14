@@ -386,4 +386,9 @@ export class GraphHandler {
       this.on('loaded', loadNow);
     }
   }
+
+  configure(data: string): void {
+    const conf = JSON.parse(data);
+    this.graph.configure(conf);
+  }
 }
