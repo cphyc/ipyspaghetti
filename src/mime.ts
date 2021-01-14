@@ -1,4 +1,4 @@
-import { MainAreaWidget, SessionContext, Toolbar } from '@jupyterlab/apputils';
+import { MainAreaWidget, SessionContext, Toolbar, ToolbarButton } from '@jupyterlab/apputils';
 
 import { CodeCell, CodeCellModel } from '@jupyterlab/cells';
 
@@ -60,22 +60,23 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     cell.outputHidden = false;
     cell.outputsScrolled = true;
 
-    const connector = new KernelConnector({
-      session: sessionContext.session
-    });
-
-    completionManager.register({
-      connector,
-      editor: cell.editor,
-      parent: this
-    });
-
     sessionContext.kernelChanged.connect(() => {
       void sessionContext.session?.kernel?.info.then(info => {
         const lang = info.language_info;
         const mimeType = mimeService.getMimeTypeByLanguage(lang);
         cellModel.mimeType = mimeType;
       });
+
+      const connector = new KernelConnector({
+        session: sessionContext.session
+      });
+
+      const ret = completionManager.register({
+        connector,
+        editor: cell.editor,
+        parent: this
+      });
+      console.log(ret);
     });
 
     const editor = cell.editor;
@@ -84,7 +85,15 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     editor.setOption('lineNumbers', true);
 
     // Create a toolbar for the cell.
+    const icon = new ToolbarButton({
+      className: 'jp-DebuggerBugButton',
+      label: 'Click me!',
+      onClick: (): void => {
+        cell.outputArea.
+      }
+    });
     const toolbar = new Toolbar();
+    toolbar.addItem('clickme', icon);
     toolbar.addItem('spacer', Toolbar.createSpacerItem());
     toolbar.addItem('interrupt', Toolbar.createInterruptButton(sessionContext));
     toolbar.addItem('restart', Toolbar.createRestartButton(sessionContext));

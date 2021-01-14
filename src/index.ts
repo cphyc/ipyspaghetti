@@ -88,32 +88,9 @@ function activate(
    *
    * @returns The panel
    */
-  function createPanel(): void {
+  function createGraph(): void {
+    console.debug('Not implementer yet');
   }
-  //   if (!widget || widget.isDisposed) {
-  //     const content = new GraphWindow({
-  //       mimeType:
-  //     }, MyPublicAPI);
-  //     widget = new MainAreaWidget({ content });
-  //     widget.id = 'node_editor';
-  //     widget.title.label = 'Node Editor';
-  //     widget.title.closable = true;
-  //     // mgr.codeCell = content.codeCell;
-  //     // mgr.graphWindow = content;
-  //   }
-  //   if (!tracker.has(widget)) {
-  //     // Track the state of the widget for later restoration
-  //     tracker.add(widget);
-  //   }
-  //   if (!widget.isAttached) {
-  //     // Attach the widget to the main work area if it's not there
-  //     app.shell.add(widget, 'main');
-  //   }
-  //   widget.content.update();
-
-  //   // Activate the widget
-  //   shell.activateById(widget.id);
-  // }
 
   // add menu tab
   const exampleMenu = new Menu({ commands });
@@ -124,7 +101,7 @@ function activate(
   commands.addCommand(CommandIDs.create, {
     label: trans.__('Open the Node Editor Panel'),
     caption: trans.__('Open the Node Editor Panel'),
-    execute: createPanel
+    execute: createGraph
   });
 
   // add items in command palette and menu
