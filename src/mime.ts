@@ -68,7 +68,7 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
       rendermime
     }).initializeState();
     cell.outputHidden = false;
-    cell.outputsScrolled = true;
+    cell.outputsScrolled = false;
     cell.outputArea.show();
 
     this._output = cloneOutput(cell, rendermime);
