@@ -18,6 +18,8 @@ import { ITranslator } from '@jupyterlab/translation';
 
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
+import { ICompletionManager } from '@jupyterlab/completer';
+
 import { Menu } from '@lumino/widgets';
 
 import { MyPublicAPI, GraphWindow } from './mime';
@@ -44,7 +46,8 @@ const extension: JupyterFrontEndPlugin<IMyManager> = {
     IMainMenu,
     IRenderMimeRegistry,
     ITranslator,
-    ILayoutRestorer
+    ILayoutRestorer,
+    ICompletionManager
   ],
   activate: activate
 };
@@ -58,6 +61,7 @@ const extension: JupyterFrontEndPlugin<IMyManager> = {
  * @param rendermime Jupyter Render Mime Registry
  * @param translator Jupyter Translator
  * @param restorer Jupyter Restorer
+ * @param restorer Jupyter Completion Manager
  * @param launcher [optional] Jupyter Launcher
  */
 function activate(
@@ -67,6 +71,7 @@ function activate(
   rendermime: IRenderMimeRegistry,
   translator: ITranslator,
   restorer: ILayoutRestorer,
+  completionManager: ICompletionManager,
   launcher: ILauncher | null
 ): IMyManager {
   console.log('JupyterLab extension node_editor is activated!');
@@ -76,7 +81,7 @@ function activate(
   const category = 'Extension Examples';
   const trans = translator.load('jupyterlab');
   // let widget: MainAreaWidget<GraphWindow>;
-  const mgr = new MyManager(manager, rendermime);
+  const mgr = new MyManager(manager, rendermime, completionManager);
   MyPublicAPI.manager = mgr;
   /**
    * Creates a example panel.

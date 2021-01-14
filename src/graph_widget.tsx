@@ -32,7 +32,6 @@ class GraphComponent extends React.Component {
   }
 
   render(): ReactNode {
-    // TODO: adapt size when parent changes
     return (
       <canvas width={this.width} height={this.height} id={this.myId}></canvas>
     );

@@ -5,3 +5,7 @@
   top: 0;
   left: 0;
 }
+
+.mimerenderer-ipygraph-editor {
+  overflow-y: scroll;
+}
