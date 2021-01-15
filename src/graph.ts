@@ -14,9 +14,15 @@ import {
 
 // @ts-ignore
 import hash from 'object-hash';
+
 // @ts-ignore
 import converter from 'hsl-to-rgb-for-reals';
+
 import { IExecuteReplyMsg } from '@jupyterlab/services/lib/kernel/messages';
+
+import { Widget } from '@lumino/widgets';
+
+import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
 const PYTHON_NODE = 1;
 
@@ -46,6 +52,13 @@ export interface IExecuteCellOptions {
 
 export interface INodeCallback {
   (id: number, options: IExecuteCellOptions): Promise<IExecuteReplyMsg>;
+}
+
+export interface IGraphHandlerOptions {
+  id: string;
+  execute: INodeCallback;
+  widget: Widget;
+  rendermime: IRenderMimeRegistry;
 }
 
 enum NodeState {
@@ -82,6 +95,7 @@ class PyLGraphNode extends LGraphNode {
   }
 
 }
+
 
 function nodeFactory(gh: GraphHandler, node: INodeSchema): void {
   class NewNode extends PyLGraphNode {
@@ -241,20 +255,27 @@ function nodeFactory(gh: GraphHandler, node: INodeSchema): void {
       })
         .then(ret => {
           this.setState(NodeState.CLEAN);
-          console.debug('executed', ret);
+          console.debug('executed', node.name, ret);
         })
         .catch(err => {
           this.setState(NodeState.ERROR);
-          console.error('Error!', err);
+          console.error('Error!', node.name, err);
         });
       console.log(`Executing ${this.getTitle()} #${this.id}`);
     }
+
     onRemoved(): void {
       // TODO
       // nodes.delete(this.id);
     }
     onAdded(): void {
-      // TODO
+      // Create the codeCell
+      // const model = new CodeCellModel({});
+      // const cell = new CodeCell({
+      //   model,
+      //   rendermime: gh.rendermime
+      // })
+      // console.log('I just got added', this.title, cell);
       // nodes.create({id: this.id, info: node});
     }
     onAction(action: string, param: any): void {
@@ -313,6 +334,9 @@ export class GraphHandler {
     loaded: []
   };
   private hasLoaded = false;
+  /** The widget in which code cells will be included */
+  private _widget: Widget;
+  private _rendermime: IRenderMimeRegistry;
 
   private known_types: { [id: string]: string | null } = {
     'typing.Any': null,
@@ -324,14 +348,16 @@ export class GraphHandler {
 
   executeCell: INodeCallback;
 
-  constructor(containerId: string, executeCell: INodeCallback) {
+  constructor(options: IGraphHandlerOptions) {
     this.setupGraph();
-    this.setupCanvas(containerId);
+    this.setupCanvas(options.id);
 
     this.parentConnections = {};
     this.socketConfiguration = {};
 
-    this.executeCell = executeCell;
+    this.executeCell = options.execute;
+    this._widget = options.widget;
+    this._rendermime = options.rendermime;
   }
 
   setupGraph(): void {
@@ -452,5 +478,13 @@ export class GraphHandler {
 
   get graph(): LGraph {
     return this._graph;
+  }
+
+  get widget(): Widget {
+    return this._widget;
+  }
+
+  get rendermime(): IRenderMimeRegistry {
+    return this._rendermime;
   }
 }

@@ -31,8 +31,6 @@ export async function execute(
     stop_on_error: stopOnError
   };
 
-  console.log('Yolo sir!');
-
   const kernel = sessionContext.session?.kernel;
   if (!kernel) {
     throw new Error('Session has no kernel.');

@@ -1,4 +1,6 @@
 import { ReactWidget } from '@jupyterlab/apputils';
+import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import { Widget } from '@lumino/widgets';
 
 import React, { ReactNode } from 'react';
 
@@ -30,7 +32,16 @@ class GraphComponent extends React.Component {
     // initializing the graph.
     // TODO: fix
     // @ts-ignore
-    const graph = new GraphHandler(`#${this.myId}`, this.props.executeCell);
+    const options = this.props.options as IGraphWidgetOptions;
+
+    const graph = new GraphHandler({
+      id: `#${this.myId}`,
+      // @ts-ignore
+      execute: options.execute,
+      // @ts-ignore
+      widget: options.execute,
+      rendermime: options.rendermime
+    });
     // TODO: fix
     // @ts-ignore
     this.props.setGraph(graph);
@@ -43,14 +54,20 @@ class GraphComponent extends React.Component {
   }
 }
 
+export interface IGraphWidgetOptions {
+  execute: INodeCallback;
+  widget: Widget;
+  rendermime: IRenderMimeRegistry
+}
+
 export class GraphWidget extends ReactWidget {
   /**
    * Constructs a new CounterWidget.
    */
-  constructor(execute: INodeCallback) {
+  constructor(options: IGraphWidgetOptions) {
     super();
     this.addClass('jp-graphContainerWidget');
-    this._execute = execute;
+    this._options = options;
   }
 
   setGraph(g: GraphHandler): void {
@@ -67,15 +84,11 @@ export class GraphWidget extends ReactWidget {
       <GraphComponent
         // @ts-ignore
         setGraph={this.setGraph.bind(this)}
-        executeCell={this.execute}
+        options={this._options}
       />
     );
   }
 
-  get execute(): INodeCallback {
-    return this._execute;
-  }
-
   private _graph: GraphHandler;
-  private _execute: INodeCallback;
+  private _options: IGraphWidgetOptions;
 }

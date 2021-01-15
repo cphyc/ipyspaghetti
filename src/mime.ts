@@ -15,7 +15,7 @@ import { OutputArea } from '@jupyterlab/outputarea';
 
 import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
 
-import { SplitPanel } from '@lumino/widgets';
+import { BoxPanel, SplitPanel } from '@lumino/widgets';
 
 import { GraphWidget } from './graph_widget';
 
@@ -123,40 +123,56 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     toolbar.addItem('name', Toolbar.createKernelNameItem(sessionContext));
     toolbar.addItem('status', Toolbar.createKernelStatusItem(sessionContext));
 
-    // Graph widget
-    const content = new GraphWidget(
-      async (
-        id: number,
-        options: IExecuteCellOptions
-      ): Promise<IExecuteReplyMsg> => {
-        // Build args
-        const args = options.parameters
-          .map((param: any) => {
-            const val = param.data;
+    // Graph widget callback
+    let previousPromise: Promise<IExecuteReplyMsg> = null;
+    const execCellCallback = async (
+      id: number,
+      options: IExecuteCellOptions
+    ): Promise<IExecuteReplyMsg> => {
+      // Build args
+      const args = options.parameters
+        .map((param: any) => {
+          const val = param.data;
 
-            if (param.data === null) {
-              return `${param.name}=__out_${param.node_id}`;
-            } else {
-              switch (typeof val) {
-                case 'number':
-                  return `${param.name}=${param.data}`;
-                case 'boolean':
-                  return `${param.name}=${param.data ? 'True' : 'False'}`;
-                case 'string':
-                default:
-                  return `${param.name}="${param.data}"`;
-              }
+          if (param.data === null) {
+            return `${param.name}=__out_${param.node_id}`;
+          } else {
+            switch (typeof val) {
+              case 'number':
+                return `${param.name}=${param.data}`;
+              case 'boolean':
+                return `${param.name}=${param.data ? 'True' : 'False'}`;
+              case 'string':
+              default:
+                return `${param.name}="${param.data}"`;
             }
-          })
-          .join(', ');
-        // Build code
-        const code = `__out_${id} = registry.nodes["${options.info.name}"](${args})\n__out_${id}`;
-        console.debug(`Executing ${code}`);
-        cell.model.value.text = code;
+          }
+        })
+        .join(', ');
+      // Build code
+      const code = `__out_${id} = registry.nodes["${options.info.name}"](${args})\n__out_${id}`;
+      console.debug(`Executing ${code}`);
+      cell.model.value.text = code;
 
-        return OutputArea.execute(code, cell.outputArea, this._sessionContext);
+      // Wait for previous reply to be done (or errored)
+      // will not be necessary once each node has its own outputarea
+      if (previousPromise) {
+        await previousPromise;
       }
-    );
+
+      previousPromise = OutputArea.execute(
+        code,
+        cell.outputArea,
+        this._sessionContext
+      );
+      return previousPromise;
+    };
+    const box = new BoxPanel({});
+    const content = new GraphWidget({
+      execute: execCellCallback,
+      widget: box,
+      rendermime
+    });
     const graphWidget = new MainAreaWidget<GraphWidget>({ content });
     content.show();
     graphWidget.show();
