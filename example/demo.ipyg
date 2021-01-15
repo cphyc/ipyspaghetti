@@ -11,6 +11,7 @@ def load_dataset(
     path: str = "/home/ccc/Documents/prog/yt-data/output_00080/info_00080.txt",
 ) -> Dataset:
     ds = yt.load(path)
+    ds.index
     return ds
 
 
