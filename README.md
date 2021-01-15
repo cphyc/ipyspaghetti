@@ -23,10 +23,10 @@ Each "node" is a function with some inputs and outputs. A script is a graph made
 - [x] Lazy execution of the nodes (only the new ones are executed, or those downstream)
 - [x] Basic save/restore graph
 - [x] Integrate in JupyterLab
-- [ ] Support `ipyg` mimetype
-- [ ] Edit the nodes' code in the browser _à la_ Jupyter Notebook
+- [x] Support `ipyg` mimetype
+- [x] Edit the nodes' code in the browser _à la_ Jupyter Notebook
+- [x] (partially done) Rename to IPySphaghetti
 - [ ] Nice packaging
-- [ ] Rename to IPySphaghetti
 
 ## Requirements
 
