@@ -6,7 +6,7 @@ import {
   sessionContextDialogs
 } from '@jupyterlab/apputils';
 
-import { CodeCell, CodeCellModel } from '@jupyterlab/cells';
+// import { CodeCell, CodeCellModel } from '@jupyterlab/cells';
 
 import { CodeMirrorMimeTypeService } from '@jupyterlab/codemirror';
 import { OutputArea } from '@jupyterlab/outputarea';
@@ -22,6 +22,10 @@ import { GraphWidget } from './graph_widget';
 import { IMyManager } from './manager';
 
 import { execute, cloneOutput, OutputArea2 } from './utils';
+
+import { NodeCodeCell, NodeCodeCellModel } from './node';
+import { IExecuteCellOptions } from './graph';
+import { IExecuteReplyMsg } from '@jupyterlab/services/lib/kernel/messages';
 
 /**
  * The default mime type for the extension.
@@ -61,9 +65,9 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
 
     this._sessionContext = sessionContext;
 
-    const cellModel = new CodeCellModel({});
+    const cellModel = new NodeCodeCellModel({});
     const mimeService = new CodeMirrorMimeTypeService();
-    const cell = new CodeCell({
+    const cell = new NodeCodeCell({
       model: cellModel,
       rendermime
     }).initializeState();
@@ -80,7 +84,6 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
         const mimeType = mimeService.getMimeTypeByLanguage(lang);
         cellModel.mimeType = mimeType;
       });
-
 
       // // TODO: doesn't work
       // const completionManager = api.manager.completionManager;
@@ -121,34 +124,39 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     toolbar.addItem('status', Toolbar.createKernelStatusItem(sessionContext));
 
     // Graph widget
-    const content = new GraphWidget((id: number, props: any) => {
-      // Build args
-      const args = props.parameters
-      .map((param: any) => {
-        const val = param.data;
+    const content = new GraphWidget(
+      async (
+        id: number,
+        options: IExecuteCellOptions
+      ): Promise<IExecuteReplyMsg> => {
+        // Build args
+        const args = options.parameters
+          .map((param: any) => {
+            const val = param.data;
 
-        if (param.data === null) {
-          return `${param.name}=__out_${param.node_id}`;
-        } else {
-          switch (typeof val) {
-              case 'number':
-                return `${param.name}=${param.data}`;
-              case 'boolean':
-                return `${param.name}=${param.data ? 'True' : 'False'}`;
-              case 'string':
-              default:
-                return `${param.name}="${param.data}"`;
-          }
-        }
-      })
-      .join(', ');
-      // Build code
-      const code = `__out_${id} = registry.nodes["${props.info.name}"](${args})\n__out_${id}`;
-      console.debug(`Executing ${code}`);
-      cell.model.value.text = code;
+            if (param.data === null) {
+              return `${param.name}=__out_${param.node_id}`;
+            } else {
+              switch (typeof val) {
+                case 'number':
+                  return `${param.name}=${param.data}`;
+                case 'boolean':
+                  return `${param.name}=${param.data ? 'True' : 'False'}`;
+                case 'string':
+                default:
+                  return `${param.name}="${param.data}"`;
+              }
+            }
+          })
+          .join(', ');
+        // Build code
+        const code = `__out_${id} = registry.nodes["${options.info.name}"](${args})\n__out_${id}`;
+        console.debug(`Executing ${code}`);
+        cell.model.value.text = code;
 
-      return OutputArea.execute(code, cell.outputArea, this._sessionContext);
-    });
+        return OutputArea.execute(code, cell.outputArea, this._sessionContext);
+      }
+    );
     const graphWidget = new MainAreaWidget<GraphWidget>({ content });
     content.show();
     graphWidget.show();
@@ -163,7 +171,7 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     this.addWidget(toolbar);
     this.addWidget(graphWidget);
     this.addWidget(cell);
-    this.addWidget(this._output);
+    // this.addWidget(this._output);
 
     // Wire code editor
     this._cell = cell;
@@ -219,7 +227,7 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
 
   private _mimeType: string;
 
-  private _cell: CodeCell;
+  private _cell: NodeCodeCell;
 
   private _sessionContext: SessionContext;
 

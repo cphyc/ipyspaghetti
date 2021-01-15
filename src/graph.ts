@@ -16,8 +16,45 @@ import {
 import hash from 'object-hash';
 // @ts-ignore
 import converter from 'hsl-to-rgb-for-reals';
+import { IExecuteReplyMsg } from '@jupyterlab/services/lib/kernel/messages';
 
 const PYTHON_NODE = 1;
+
+export interface INodeSchemaIO {
+  type: string;
+  optional: boolean;
+}
+export interface INodeSchema {
+  inputs: { [id: string]: INodeSchemaIO };
+  outputs: { [id: string]: INodeSchemaIO };
+  name: string;
+  source: string;
+}
+
+export interface IOParameters {
+  name: string;
+  node_id: number;
+  socket: number;
+  data: any;
+}
+
+export interface IExecuteCellOptions {
+  id: number;
+  info: INodeSchema;
+  parameters: IOParameters[];
+}
+
+export interface INodeCallback {
+  (id: number, options: IExecuteCellOptions): Promise<IExecuteReplyMsg>;
+}
+
+enum NodeState {
+  CLEAN = 1,
+  MISSING = 2,
+  DIRTY = 4,
+  RUNNING = 8,
+  ERROR = 16
+}
 
 function configureSocket(id: string, optional: boolean): Partial<INodeSlot> {
   const h = hash(id);
@@ -37,37 +74,43 @@ function configureSocket(id: string, optional: boolean): Partial<INodeSlot> {
   return ret;
 }
 
-enum NodeState {
-  CLEAN = 1,
-  MISSING = 2,
-  DIRTY = 4,
-  RUNNING = 8
+class PyLGraphNode extends LGraphNode {
+  setProperty(key: string, value: any): void {
+    // Missing declaration in d.ts file
+    //@ts-ignore
+    super.setProperty(key, value);
+  }
+
 }
 
-// @ts-ignore
-function nodeFactory(gh: GraphHandler, node: NodeSchema) {
-  class NewNode extends LGraphNode {
+function nodeFactory(gh: GraphHandler, node: INodeSchema): void {
+  class NewNode extends PyLGraphNode {
     mode = LiteGraph.ALWAYS;
     type = `mynodes/${node.name}`;
 
     static title = node.name;
 
+    getNode(): INodeSchema {
+      return node;
+    }
+    get node(): INodeSchema {
+      return this.getNode();
+    }
+
     constructor(title?: string) {
       super(title);
 
-      this.title = node.name;
+      this.title = this.node.name;
 
-      for (const [name, iinfos] of Object.entries(node.inputs)) {
-        const infos = iinfos as any;
+      for (const [name, infos] of Object.entries(this.node.inputs)) {
         const ntype = gh.normalizeType(infos.type);
         const extra = gh.getSocketConfiguration(ntype, infos.optional);
 
         this.addInput(name, ntype, extra);
         console.log(`${node.name}.input ${name} -> ${ntype}`);
       }
-      for (const [name, iinfos] of Object.entries(node.outputs)) {
+      for (const [name, infos] of Object.entries(node.outputs)) {
         // TODO: cleaner
-        const infos = iinfos as any;
         const ntype = gh.normalizeType(infos['type']);
         this.addOutput(
           name,
@@ -77,11 +120,8 @@ function nodeFactory(gh: GraphHandler, node: NodeSchema) {
         console.log(`${node.name}.output ${name} -> ${ntype}`);
       }
       this.setState(NodeState.DIRTY);
-      // @ts-ignore
       this.setProperty('count', 0);
-      // @ts-ignore
       this.setProperty('previous_input', []);
-      // @ts-ignore
       this.setProperty('type', PYTHON_NODE);
     }
 
@@ -90,15 +130,16 @@ function nodeFactory(gh: GraphHandler, node: NodeSchema) {
     }
 
     setState(state: NodeState): void {
-      // @ts-ignore
       this.setProperty('state', state);
-      const bg_colors = {
-        1: 'green', // Clean
-        2: 'red', // Missing
-        4: 'purple', // Dirty
-        8: 'blue' // Running
+      // di
+      const bgColors = {
+        1: 'green',   // Clean
+        2: '#880000', // Missing
+        4: 'purple',  // Dirty
+        8: 'blue',    // Running
+        16: '#ff0000' // Error
       };
-      this.boxcolor = bg_colors[state];
+      this.boxcolor = bgColors[state];
       // Redraw canvas
       this.setDirtyCanvas(false, true);
     }
@@ -117,7 +158,6 @@ function nodeFactory(gh: GraphHandler, node: NodeSchema) {
         const input = this.inputs[i];
 
         // Missing non-optional input
-        // @ts-ignore
         if (!(node.inputs[input.name].optional || orig)) {
           state = NodeState.MISSING;
           break;
@@ -129,7 +169,7 @@ function nodeFactory(gh: GraphHandler, node: NodeSchema) {
         // Check upstream node was updated
         const prevInput = this.properties['previous_input'][i];
         const newInput = this.getInputData(i);
-        if (JSON.stringify(prevInput) != JSON.stringify(newInput)) {
+        if (JSON.stringify(prevInput) !== JSON.stringify(newInput)) {
           state = NodeState.DIRTY;
         }
       }
@@ -137,7 +177,7 @@ function nodeFactory(gh: GraphHandler, node: NodeSchema) {
       return state;
     }
 
-    onExecute() {
+    onExecute(): void {
       const state = this.updateNodeState();
       if (state !== NodeState.DIRTY) {
         for (let iout = 0; iout < this.outputs.length; ++iout) {
@@ -152,32 +192,39 @@ function nodeFactory(gh: GraphHandler, node: NodeSchema) {
       // Gather inputs
       const parameters = this.inputs
         .map(input => {
-          if (!input.link) return;
+          if (!input.link) {
+            return;
+          }
 
           const link = gh.graph.links[input.link];
-          const from_node = gh.graph.getNodeById(link.origin_id);
-          if (from_node.properties["type"] == PYTHON_NODE) {
-              return {
-                  name: input.name,
-                  node_id: from_node.id,
-                  socket: link.origin_slot,
-                  data: null
-              }
+          const fromNode = gh.graph.getNodeById(link.origin_id);
+          let ret: IOParameters;
+          if (fromNode.properties['type'] === PYTHON_NODE) {
+            ret = {
+              name: input.name,
+              // eslint-disable-next-line @typescript-eslint/camelcase
+              node_id: fromNode.id,
+              socket: link.origin_slot,
+              data: null
+            };
           } else {
-              return {
-                  name: input.name,
-                  node_id: from_node.id,
-                  socket: link.origin_slot,
-                  data: from_node.getOutputData(link.origin_slot)
-              }
+            ret = {
+              name: input.name,
+              // eslint-disable-next-line @typescript-eslint/camelcase
+              node_id: fromNode.id,
+              socket: link.origin_slot,
+              data: fromNode.getOutputData(link.origin_slot)
+            };
           }
-      }).filter(elem => elem);
+          return ret;
+        })
+        .filter(elem => elem);
 
       // Set previous input data
       const inputData = this.inputs.map((input, index) => {
         return this.getInputData(index);
       });
-      // @ts-ignore
+
       this.setProperty('previous_input', inputData);
 
       // We update the output *before* the node has run so that
@@ -192,21 +239,14 @@ function nodeFactory(gh: GraphHandler, node: NodeSchema) {
         info: node,
         parameters: parameters
       })
-        .then((ret: any) => {
-        console.debug("executed", ret);
+        .then(ret => {
+          this.setState(NodeState.CLEAN);
+          console.debug('executed', ret);
         })
-        .catch((err: any) => {
-        console.error("Error!", err);
-      });
-
-      // exec.update(this.id, {id: this.id, info: node, parameters: parameters})
-      // .then(reply => {
-      //     this.setState(NodeState.CLEAN);
-      //     if (node.name == "show") {
-      //         $("#stdout").html(reply.data.stdout);
-      //         $("#stderr").html(reply.data.stderr);
-      //     }
-      // })
+        .catch(err => {
+          this.setState(NodeState.ERROR);
+          console.error('Error!', err);
+        });
       console.log(`Executing ${this.getTitle()} #${this.id}`);
     }
     onRemoved(): void {
@@ -217,7 +257,7 @@ function nodeFactory(gh: GraphHandler, node: NodeSchema) {
       // TODO
       // nodes.create({id: this.id, info: node});
     }
-    onAction(action: any, param: any): void {
+    onAction(action: string, param: any): void {
       console.log(action);
     }
 
@@ -265,9 +305,9 @@ function nodeFactory(gh: GraphHandler, node: NodeSchema) {
 export class GraphHandler {
   private _graph: LGraph;
   private canvas: LGraphCanvas;
-  private socketConfiguration: Map<string, Partial<INodeSlot>>;
+  private socketConfiguration: { [id: string]: Partial<INodeSlot> };
 
-  private parentConnections: Map<string, string>;
+  private parentConnections: { [id: string]: string };
 
   private callbacks: { [id: string]: Array<Function> } = {
     loaded: []
@@ -282,14 +322,14 @@ export class GraphHandler {
     "<class 'bool'>": 'boolean'
   };
 
-  executeCell: Function;
+  executeCell: INodeCallback;
 
-  constructor(containerId: string, executeCell: Function) {
+  constructor(containerId: string, executeCell: INodeCallback) {
     this.setupGraph();
     this.setupCanvas(containerId);
 
-    this.parentConnections = new Map();
-    this.socketConfiguration = new Map<string, Partial<INodeSlot>>();
+    this.parentConnections = {};
+    this.socketConfiguration = {};
 
     this.executeCell = executeCell;
   }
@@ -304,10 +344,10 @@ export class GraphHandler {
 
     // Reduce font size for groups
     // @ts-ignore
-    const prev_ctor = LGraphGroup.prototype._ctor;
+    const prevCtor = LGraphGroup.prototype._ctor;
     // @ts-ignore
-    LGraphGroup.prototype._ctor = function(title) {
-      prev_ctor.bind(this)(title);
+    LGraphGroup.prototype._ctor = function(title): void {
+      prevCtor.bind(this)(title);
       // @ts-ignore
       // eslint-disable-next-line @typescript-eslint/camelcase
       this.font_size = 14;
@@ -339,15 +379,22 @@ export class GraphHandler {
     if (type in this.known_types) {
       return this.known_types[type];
     } else if (type in this.parentConnections) {
-      return this.parentConnections.get(type);
+      return this.parentConnections[type];
     } else {
       return type;
     }
   }
 
-  loadComponents(allNodes: any): void {
+  loadComponents(allNodes: Array<INodeSchema>): void {
+    console.log(LiteGraph);
     for (const node of Object.values(allNodes)) {
-      nodeFactory(this, node);
+      if (node.name in LiteGraph.Nodes) {
+        // TODO: update schema
+        // const lgNode = LiteGraph.Nodes[node.name];
+      } else {
+        // New node
+        nodeFactory(this, node);
+      }
     }
 
     this.hasLoaded = true;
@@ -364,11 +411,11 @@ export class GraphHandler {
     socket: string,
     optional: boolean
   ): Partial<INodeSlot> {
-    if (this.socketConfiguration.has(socket)) {
-      return this.socketConfiguration.get(socket);
+    if (socket in this.socketConfiguration) {
+      return this.socketConfiguration[socket];
     } else {
       const config = configureSocket(socket, optional);
-      this.socketConfiguration.set(socket, config);
+      this.socketConfiguration[socket] = config;
       return config;
     }
   }

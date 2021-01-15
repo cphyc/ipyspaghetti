@@ -2,7 +2,7 @@ import { ReactWidget } from '@jupyterlab/apputils';
 
 import React, { ReactNode } from 'react';
 
-import { GraphHandler } from './graph';
+import { INodeCallback, GraphHandler } from './graph';
 
 /**
  * React component for a counter.
@@ -47,7 +47,7 @@ export class GraphWidget extends ReactWidget {
   /**
    * Constructs a new CounterWidget.
    */
-  constructor(execute: Function) {
+  constructor(execute: INodeCallback) {
     super();
     this.addClass('jp-graphContainerWidget');
     this._execute = execute;
@@ -63,15 +63,19 @@ export class GraphWidget extends ReactWidget {
 
   render(): JSX.Element {
     // TODO: fix this
-    // @ts-ignore
-    return <GraphComponent setGraph={this.setGraph.bind(this)} executeCell={this.execute}
-    />;
+    return (
+      <GraphComponent
+        // @ts-ignore
+        setGraph={this.setGraph.bind(this)}
+        executeCell={this.execute}
+      />
+    );
   }
 
-  get execute(): Function {
+  get execute(): INodeCallback {
     return this._execute;
   }
 
   private _graph: GraphHandler;
-  private _execute: Function;
+  private _execute: INodeCallback;
 }
