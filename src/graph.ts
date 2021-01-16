@@ -20,9 +20,12 @@ import converter from 'hsl-to-rgb-for-reals';
 
 import { IExecuteReplyMsg } from '@jupyterlab/services/lib/kernel/messages';
 
-import { Widget } from '@lumino/widgets';
+import { Panel, SplitPanel } from '@lumino/widgets';
 
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+
+import { NodeCodeCell, NodeCodeCellModel } from './node';
+import { CodeCell } from '@jupyterlab/cells';
 
 const PYTHON_NODE = 1;
 
@@ -48,6 +51,7 @@ export interface IExecuteCellOptions {
   id: number;
   info: INodeSchema;
   parameters: IOParameters[];
+  cell: CodeCell;
 }
 
 export interface INodeCallback {
@@ -57,7 +61,7 @@ export interface INodeCallback {
 export interface IGraphHandlerOptions {
   id: string;
   execute: INodeCallback;
-  widget: Widget;
+  widget: Panel;
   rendermime: IRenderMimeRegistry;
 }
 
@@ -101,6 +105,9 @@ function nodeFactory(gh: GraphHandler, node: INodeSchema): void {
   class NewNode extends PyLGraphNode {
     mode = LiteGraph.ALWAYS;
     type = `mynodes/${node.name}`;
+    private graphHandler: GraphHandler = gh;
+    private _cell: CodeCell;
+    // private _model: CellModel;
 
     static title = node.name;
 
@@ -210,8 +217,8 @@ function nodeFactory(gh: GraphHandler, node: INodeSchema): void {
             return;
           }
 
-          const link = gh.graph.links[input.link];
-          const fromNode = gh.graph.getNodeById(link.origin_id);
+          const link = this.graphHandler.graph.links[input.link];
+          const fromNode = this.graphHandler.graph.getNodeById(link.origin_id);
           let ret: IOParameters;
           if (fromNode.properties['type'] === PYTHON_NODE) {
             ret = {
@@ -248,10 +255,13 @@ function nodeFactory(gh: GraphHandler, node: INodeSchema): void {
         this.setOutputData(iout, val + 1);
       }
 
-      gh.executeCell(this.id, {
-        id: this.id,
-        info: node,
-        parameters: parameters
+      this._cell.model.value.text += '\nprout!';
+
+      this.graphHandler.executeCell(this.id, {
+          id: this.id,
+          info: node,
+          parameters: parameters,
+          cell: this._cell
       })
         .then(ret => {
           this.setState(NodeState.CLEAN);
@@ -270,16 +280,32 @@ function nodeFactory(gh: GraphHandler, node: INodeSchema): void {
     }
     onAdded(): void {
       // Create the codeCell
-      // const model = new CodeCellModel({});
-      // const cell = new CodeCell({
-      //   model,
-      //   rendermime: gh.rendermime
-      // })
-      // console.log('I just got added', this.title, cell);
-      // nodes.create({id: this.id, info: node});
+      const model = new NodeCodeCellModel({});
+      const cell = new NodeCodeCell({
+        model,
+        rendermime: this.graphHandler.rendermime
+      })
+      model.value.text = node.source;
+      console.log('I just got added', this.title, cell);
+      this.graphHandler.widget.addWidget(cell);
+      model.mimeType = 'text/x-ipython';
+      SplitPanel.setStretch(cell, 1);
+      cell.hide();
+
+      this._cell = cell;
     }
+
     onAction(action: string, param: any): void {
       console.log(action);
+    }
+
+    onSelected(): void {
+      this.graphHandler.widget.widgets.forEach(w => w.hide());
+      this._cell.show();
+    }
+
+    onDeselected(): void {
+      this._cell.hide();
     }
 
     onConnectionsChange(
@@ -335,7 +361,7 @@ export class GraphHandler {
   };
   private hasLoaded = false;
   /** The widget in which code cells will be included */
-  private _widget: Widget;
+  private _widget: Panel;
   private _rendermime: IRenderMimeRegistry;
 
   private known_types: { [id: string]: string | null } = {
@@ -349,6 +375,8 @@ export class GraphHandler {
   executeCell: INodeCallback;
 
   constructor(options: IGraphHandlerOptions) {
+    console.log(options.execute);
+    console.log(options.widget);
     this.setupGraph();
     this.setupCanvas(options.id);
 
@@ -480,7 +508,7 @@ export class GraphHandler {
     return this._graph;
   }
 
-  get widget(): Widget {
+  get widget(): Panel {
     return this._widget;
   }
 

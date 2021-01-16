@@ -1,6 +1,6 @@
 import { ReactWidget } from '@jupyterlab/apputils';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
-import { Widget } from '@lumino/widgets';
+import { Panel } from '@lumino/widgets';
 
 import React, { ReactNode } from 'react';
 
@@ -36,10 +36,8 @@ class GraphComponent extends React.Component {
 
     const graph = new GraphHandler({
       id: `#${this.myId}`,
-      // @ts-ignore
       execute: options.execute,
-      // @ts-ignore
-      widget: options.execute,
+      widget: options.widget,
       rendermime: options.rendermime
     });
     // TODO: fix
@@ -56,8 +54,8 @@ class GraphComponent extends React.Component {
 
 export interface IGraphWidgetOptions {
   execute: INodeCallback;
-  widget: Widget;
-  rendermime: IRenderMimeRegistry
+  widget: Panel;
+  rendermime: IRenderMimeRegistry;
 }
 
 export class GraphWidget extends ReactWidget {

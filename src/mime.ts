@@ -15,7 +15,7 @@ import { OutputArea } from '@jupyterlab/outputarea';
 
 import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
 
-import { BoxPanel, SplitPanel } from '@lumino/widgets';
+import { SplitPanel } from '@lumino/widgets';
 
 import { GraphWidget } from './graph_widget';
 
@@ -130,6 +130,7 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
       options: IExecuteCellOptions
     ): Promise<IExecuteReplyMsg> => {
       // Build args
+      const cell = options.cell;
       const args = options.parameters
         .map((param: any) => {
           const val = param.data;
@@ -167,7 +168,7 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
       );
       return previousPromise;
     };
-    const box = new BoxPanel({});
+    const box = new SplitPanel({});
     const content = new GraphWidget({
       execute: execCellCallback,
       widget: box,
@@ -177,6 +178,9 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     content.show();
     graphWidget.show();
 
+    SplitPanel.setStretch(cell, 1);
+    box.addWidget(cell);
+
     this._graphWidget = content;
 
     // Lay out the widgets
@@ -184,9 +188,11 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
 
     SplitPanel.setStretch(graphWidget, 1);
     SplitPanel.setStretch(cell, 1);
+    SplitPanel.setStretch(box, 1);
     this.addWidget(toolbar);
     this.addWidget(graphWidget);
-    this.addWidget(cell);
+    // this.addWidget(cell);
+    this.addWidget(box);
     // this.addWidget(this._output);
 
     // Wire code editor
