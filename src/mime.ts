@@ -47,9 +47,7 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
     const widget = new GraphEditionPanel(
       sessionContext,
       api,
-      {
-        orientation: 'vertical'
-      }
+      {direction: 'top-to-bottom'}
     );
     widget.show();
     this.addWidget(widget);

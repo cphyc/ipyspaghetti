@@ -5,7 +5,7 @@ import { IExecuteReplyMsg } from '@jupyterlab/services/lib/kernel/messages';
 import { JSONObject } from '@lumino/coreutils';
 import { BoxPanel } from '@lumino/widgets';
 
-import { GraphEditor } from './graph_widget2';
+import { GraphEditor } from './graph_widget';
 
 /** Inputs/outputs of functions */
 export interface IFunctionSchemaIO {

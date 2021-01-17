@@ -1,10 +1,10 @@
 import { Toolbar, SessionContext } from '@jupyterlab/apputils';
 
-import { BoxPanel, SplitPanel, StackedPanel } from '@lumino/widgets';
+import { BoxPanel, SplitPanel } from '@lumino/widgets';
 
 import { IMyPublicAPI } from './mime';
 
-import { GraphEditor } from './graph_widget2';
+import { GraphEditor } from './graph_widget';
 
 import { GraphAPI } from './graph_api';
 
@@ -31,11 +31,11 @@ export interface IGraphNodeSchema {
 
 const EDITOR_CLASS_NAME = 'mimerenderer-ipygraph-editor';
 
-export class GraphEditionPanel extends StackedPanel {
+export class GraphEditionPanel extends BoxPanel {
   constructor(
     sessionContext: SessionContext,
     api: IMyPublicAPI,
-    options: StackedPanel.IOptions
+    options: BoxPanel.IOptions
   ) {
     super(options);
 
@@ -47,29 +47,33 @@ export class GraphEditionPanel extends StackedPanel {
 
     // Create the widgets
     const toolbar = createGraphToolbar(sessionContext);
+    toolbar.show();
 
     const graphEditor = new GraphEditor(graphAPI);
-    const codeBox = new SplitPanel({});
     const functionEditorBox = new BoxPanel({});
     const nodeViewerBox = new BoxPanel({});
 
     graphAPI.setWidgets(graphEditor, functionEditorBox, nodeViewerBox);
 
     // Setup code box
+    const codeBox = new SplitPanel({});
     SplitPanel.setStretch(functionEditorBox, 1);
     SplitPanel.setStretch(nodeViewerBox, 1);
     codeBox.addWidget(functionEditorBox);
     codeBox.addWidget(nodeViewerBox);
 
-    const editionWidget = new SplitPanel({});
+    // Setup edition zone
+    const editionZone = new SplitPanel({ orientation: 'vertical' });
     SplitPanel.setStretch(graphEditor, 1);
     SplitPanel.setStretch(codeBox, 1);
-    editionWidget.addWidget(graphEditor);
-    editionWidget.addWidget(codeBox);
+    editionZone.addWidget(graphEditor);
+    editionZone.addWidget(codeBox);
 
     // Add the widget
+    BoxPanel.setStretch(toolbar, 0);
+    BoxPanel.setStretch(editionZone, 1);
     this.addWidget(toolbar);
-    this.addWidget(editionWidget);
+    this.addWidget(editionZone);
   }
 }
 
