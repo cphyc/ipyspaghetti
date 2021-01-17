@@ -26,8 +26,8 @@ export const MyPublicAPI: IMyPublicAPI = {
 export const rendererFactory: IRenderMime.IRendererFactory = {
   safe: true,
   mimeTypes: [MIME_TYPE],
-  createRenderer: (options) => {
-    return new GraphEditionPanel(MyPublicAPI, { orientation: 'vertical' });
+  createRenderer: (options: IRenderMime.IRendererOptions) => {
+    return new GraphEditionPanel(MyPublicAPI, { orientation: 'vertical' }, options);
   }
 };
 

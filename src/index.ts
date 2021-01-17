@@ -87,7 +87,7 @@ function activate(
    * @returns The panel
    */
   function createGraph(): void {
-    console.debug('Not implementer yet');
+    console.debug('No-op');
   }
 
   // add menu tab
@@ -99,7 +99,7 @@ function activate(
   commands.addCommand(CommandIDs.create, {
     label: trans.__('Open the Node Editor Panel'),
     caption: trans.__('Open the Node Editor Panel'),
-    execute: createGraph,
+    execute: createGraph
   });
 
   // add items in command palette and menu

@@ -1,8 +1,13 @@
 import { SessionContext } from '@jupyterlab/apputils';
+
 import { CodeCell, CodeCellModel } from '@jupyterlab/cells';
+
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+
 import { IExecuteReplyMsg } from '@jupyterlab/services/lib/kernel/messages';
+
 import { JSONObject } from '@lumino/coreutils';
+
 import { BoxPanel } from '@lumino/widgets';
 
 import { GraphEditor } from './graph_widget';
@@ -40,6 +45,8 @@ export class GraphAPI {
   private _rendermime: IRenderMimeRegistry;
   private _sessionContext: SessionContext;
 
+  private _globalCodeCell: FunctionEditor;
+
   constructor(sessionContext: SessionContext, rendermime: IRenderMimeRegistry) {
     this._sessionContext = sessionContext;
     this._rendermime = rendermime;
@@ -48,11 +55,44 @@ export class GraphAPI {
   setWidgets(
     graphWidget: GraphEditor,
     funContainer: BoxPanel,
-    nodeContainer: BoxPanel,
+    nodeContainer: BoxPanel
   ): void {
     this._graphWidget = graphWidget;
     this._funContainer = funContainer;
     this._nodeContainer = nodeContainer;
+    const model = new CodeCellModel({});
+    this._globalCodeCell = new FunctionEditor(
+      {
+        inputs: {},
+        outputs: {},
+        name: 'Global namespace',
+        source: ''
+      },
+      {
+        model,
+        rendermime: this._rendermime
+      }
+    );
+    this._funContainer.addWidget(this._globalCodeCell);
+    this._globalCodeCell.show();
+  }
+
+  setupGlobals(source: string): void {
+    if (!this._globalCodeCell) {
+      console.error('Missing global code cell');
+      return;
+    }
+    console.debug('Setting global code value');
+    this._globalCodeCell.model.value.text = source;
+  }
+
+  executeGlobals(): void {
+    if (!this._globalCodeCell) {
+      console.error('Missing global code cell');
+      return;
+    }
+    console.debug('Executing global code value');
+    this._globalCodeCell.execute(this._sessionContext);
   }
 
   //--------------------------------------------------------

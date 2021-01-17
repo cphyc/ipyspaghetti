@@ -1,4 +1,9 @@
-import { Toolbar, SessionContext, MainAreaWidget } from '@jupyterlab/apputils';
+import {
+  Toolbar,
+  SessionContext,
+  MainAreaWidget,
+  sessionContextDialogs
+} from '@jupyterlab/apputils';
 
 import { BoxPanel, SplitPanel } from '@lumino/widgets';
 
@@ -9,6 +14,10 @@ import { GraphEditor } from './graph_widget';
 import { GraphAPI } from './graph_api';
 
 import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
+
+import { CodeMirrorMimeTypeService } from '@jupyterlab/codemirror';
+
+import { CodeCell } from '@jupyterlab/cells';
 
 
 /** Inputs/outputs of functions */
@@ -39,21 +48,28 @@ const EDITOR_CLASS_NAME = 'mimerenderer-ipygraph-editor';
 const CLASS_NAME = 'mimerenderer-ipygraph';
 export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
   implements IRenderMime.IRenderer {
-  constructor(api: IMyPublicAPI, options: SplitPanel.IOptions) {
+  private _sessionContext: SessionContext;
+  private _mimeRendererOptions: IRenderMime.IRendererOptions;
+  private _graphAPI: GraphAPI;
+  // private _mimeRendererOptions: IRenderMime.IRendererOptions;
+  constructor(
+    api: IMyPublicAPI,
+    options: SplitPanel.IOptions,
+    mimeRendererOptions: IRenderMime.IRendererOptions
+  ) {
     const content = new SplitPanel(options);
     super({ content });
 
-    // this._mimeType = options.mimeType;
-    this.addClass(CLASS_NAME);
-
-    const { sessions } = api.manager.manager;
-    const { kernelspecs } = api.manager.manager;
+    const { sessions, kernelspecs } = api.manager.manager;
 
     const sessionContext = new SessionContext({
       sessionManager: sessions,
       specsManager: kernelspecs,
       name: 'IPyGraph Kernel'
     });
+
+    // this._mimeType = options.mimeType;
+    this.addClass(CLASS_NAME);
 
     this.addClass(EDITOR_CLASS_NAME);
 
@@ -68,6 +84,7 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
     const functionEditorBox = new BoxPanel({});
     const nodeViewerBox = new BoxPanel({});
 
+    // Attach the widget now that the kernel is ready
     graphAPI.setWidgets(graphEditor, functionEditorBox, nodeViewerBox);
 
     // Setup code box
@@ -82,12 +99,51 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
     SplitPanel.setStretch(codeBox, 1);
     content.addWidget(graphEditor);
     content.addWidget(codeBox);
+
+    // Change the mime type of cells when the kernel has loaded
+    const mimeService = new CodeMirrorMimeTypeService();
+    sessionContext.kernelChanged.connect(() => {
+      sessionContext.session?.kernel?.info.then(info => {
+        const lang = info.language_info;
+        const mimeType = mimeService.getMimeTypeByLanguage(lang);
+        for (const box of [nodeViewerBox, functionEditorBox]) {
+          box.widgets.forEach(w => ((w as CodeCell).model.mimeType = mimeType));
+        }
+        graphAPI.executeGlobalCell();
+      });
+    });
+
+    this._sessionContext = sessionContext;
+    this._mimeRendererOptions = mimeRendererOptions;
+    this._graphAPI = graphAPI;
+
+    // Query a kernel
+    sessionContext
+      .initialize()
+      .then(async value => {
+        if (value) {
+          await sessionContextDialogs.selectKernel(sessionContext);
+        }
+      })
+      .catch(reason => {
+        console.error(
+          `Failed to initialize the session in ExamplePanel.\n${reason}`
+        );
+      });
+    this._sessionContext;
   }
 
   /**
    * Render ipygraph into this widget's node.
    */
   async renderModel(model: IRenderMime.IMimeModel): Promise<void> {
+    // Launch a kernel
+    console.log('HERE');
+    const mimeType = this._mimeRendererOptions.mimeType;
+    const code = model.data[mimeType] as string;
+    await this._graphAPI.setupGlobalEditionZone(code);
+    // TODO: load nodes
+
     // const data = model.data[this._mimeType] as string;
     // const magicString = '___NODES = """';
     // const splitPoint = data.indexOf(magicString);
