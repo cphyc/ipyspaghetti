@@ -20,27 +20,18 @@ import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
 import { CodeCell } from '@jupyterlab/cells';
 
+import { IFunctionSchema } from './graph_api';
+
 // @ts-ignore
 import hash from 'object-hash';
 
 // @ts-ignore
 import converter from 'hsl-to-rgb-for-reals';
+
 import { GraphAPI } from './graph_api';
 
 
 const PYTHON_NODE = 1;
-
-export interface INodeSchemaIO {
-  type: string;
-  optional: boolean;
-}
-export interface INodeSchema {
-  inputs: { [id: string]: INodeSchemaIO };
-  outputs: { [id: string]: INodeSchemaIO };
-  name: string;
-  source: string;
-}
-
 export interface IOParameters {
   name: string;
   node_id: number;
@@ -50,7 +41,7 @@ export interface IOParameters {
 
 export interface IExecuteCellOptions {
   id: number;
-  info: INodeSchema;
+  info: IFunctionSchema;
   parameters: IOParameters[];
   cell: CodeCell;
 }
@@ -93,7 +84,7 @@ class PyLGraphNode extends LGraphNode {
   }
 }
 
-function nodeFactory(gh: GraphHandler, node: INodeSchema): void {
+export function nodeFactory(gh: GraphHandler, node: IFunctionSchema): void {
   class NewNode extends PyLGraphNode {
     mode = LiteGraph.ALWAYS;
 
@@ -106,11 +97,11 @@ function nodeFactory(gh: GraphHandler, node: INodeSchema): void {
 
     static title = node.name;
 
-    getNode(): INodeSchema {
+    getNode(): IFunctionSchema {
       return node;
     }
 
-    get node(): INodeSchema {
+    get node(): IFunctionSchema {
       return this.getNode();
     }
 
@@ -154,7 +145,7 @@ function nodeFactory(gh: GraphHandler, node: INodeSchema): void {
         2: '#880000', // Missing
         4: 'purple', // Dirty
         8: 'blue', // Running
-        16: '#ff0000', // Error
+        16: '#ff0000' // Error
       };
       this.boxcolor = bgColors[state];
       // Redraw canvas
@@ -428,6 +419,11 @@ export class GraphHandler {
     this.canvas.inner_text_font = font;
   }
 
+  createFunction(schema: IFunctionSchema): void {
+    // TODO: check the schema does not already exist
+    nodeFactory(this, schema);
+  }
+
   normalizeType(type: string): string {
     if (type in this.known_types) {
       return this.known_types[type];
@@ -438,7 +434,7 @@ export class GraphHandler {
     return type;
   }
 
-  loadComponents(allNodes: Array<INodeSchema>): void {
+  loadComponents(allNodes: Array<IFunctionSchema>): void {
     console.log(LiteGraph);
     for (const node of Object.values(allNodes)) {
       if (node.name in LiteGraph.Nodes) {

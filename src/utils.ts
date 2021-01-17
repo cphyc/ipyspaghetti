@@ -1,14 +1,10 @@
 import { JSONObject } from '@lumino/coreutils';
 
-import { OutputArea } from '@jupyterlab/outputarea';
+import { OutputArea, SimplifiedOutputArea } from '@jupyterlab/outputarea';
 
 import { ISessionContext } from '@jupyterlab/apputils';
 
 import { Kernel, KernelMessage } from '@jupyterlab/services';
-
-import { CodeCell } from '@jupyterlab/cells';
-
-import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
 import { IFunctionSchema, IGraphNodeSchema } from './graph_panel';
 
@@ -44,8 +40,8 @@ export async function execute(
   return future.done;
 }
 
-export class OutputArea2 extends OutputArea {
-  graphData: string;
+export class OutputAreaInteractRegistry extends SimplifiedOutputArea {
+  private _IOPubStream: string;
 
   set future(
     value: Kernel.IShellFuture<
@@ -54,29 +50,21 @@ export class OutputArea2 extends OutputArea {
     >
   ) {
     super.future = value;
-    const prev = value.onIOPub;
-    this.graphData = '';
+    const prevOnIOPub = value.onIOPub;
+    this._IOPubStream = '';
     value.onIOPub = (msg): void => {
       const msgType = msg.header.msg_type;
       if (msgType === 'stream') {
         const ret: any = msg.content;
-        this.graphData += ret.text;
-      } else {
-        prev(msg);
+        this._IOPubStream += ret.text;
       }
+      prevOnIOPub(msg);
     };
   }
-}
 
-export function cloneOutput(
-  cell: CodeCell,
-  rendermime: IRenderMimeRegistry
-): OutputArea2 {
-  return new OutputArea2({
-    model: cell.model.outputs,
-    contentFactory: cell.contentFactory,
-    rendermime,
-  });
+  get IOPubStream(): any {
+    return this._IOPubStream;
+  }
 }
 
 

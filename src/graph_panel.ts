@@ -71,8 +71,6 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
     // this._mimeType = options.mimeType;
     this.addClass(CLASS_NAME);
 
-    this.addClass(EDITOR_CLASS_NAME);
-
     // Initialize the API
     const { rendermime } = api.manager;
     const graphAPI = new GraphAPI(sessionContext, rendermime);
@@ -83,6 +81,9 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
     const graphEditor = new GraphEditor(graphAPI);
     const functionEditorBox = new BoxPanel({});
     const nodeViewerBox = new BoxPanel({});
+    [functionEditorBox, nodeViewerBox].forEach(widget => {
+      widget.addClass(EDITOR_CLASS_NAME);
+    });
 
     // Attach the widget now that the kernel is ready
     graphAPI.setWidgets(graphEditor, functionEditorBox, nodeViewerBox);
@@ -103,13 +104,14 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
     // Change the mime type of cells when the kernel has loaded
     const mimeService = new CodeMirrorMimeTypeService();
     sessionContext.kernelChanged.connect(() => {
-      sessionContext.session?.kernel?.info.then(info => {
+      sessionContext.session?.kernel?.info.then(async info => {
         const lang = info.language_info;
         const mimeType = mimeService.getMimeTypeByLanguage(lang);
         for (const box of [nodeViewerBox, functionEditorBox]) {
           box.widgets.forEach(w => ((w as CodeCell).model.mimeType = mimeType));
         }
-        graphAPI.executeGlobalCell();
+        await graphAPI.executeGlobals();
+        await graphAPI.loadFunctionList();
       });
     });
 
@@ -141,7 +143,7 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
     console.log('HERE');
     const mimeType = this._mimeRendererOptions.mimeType;
     const code = model.data[mimeType] as string;
-    await this._graphAPI.setupGlobalEditionZone(code);
+    await this._graphAPI.setupGlobals(code);
     // TODO: load nodes
 
     // const data = model.data[this._mimeType] as string;

@@ -2,15 +2,21 @@ import { SessionContext } from '@jupyterlab/apputils';
 
 import { CodeCell, CodeCellModel } from '@jupyterlab/cells';
 
+import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea';
+
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
 import { IExecuteReplyMsg } from '@jupyterlab/services/lib/kernel/messages';
 
 import { JSONObject } from '@lumino/coreutils';
 
-import { BoxPanel } from '@lumino/widgets';
+import { Panel } from '@lumino/widgets';
 
 import { GraphEditor } from './graph_widget';
+
+import { OutputAreaInteractRegistry } from './utils';
+
+import { nodeFactory } from './graph';
 
 /** Inputs/outputs of functions */
 export interface IFunctionSchemaIO {
@@ -39,13 +45,14 @@ export interface INodeSchema {
 
 export class GraphAPI {
   private _graphWidget: GraphEditor;
-  private _funContainer: BoxPanel;
-  private _nodeContainer: BoxPanel;
+  private _funContainer: Panel;
+  private _nodeContainer: Panel;
 
   private _rendermime: IRenderMimeRegistry;
   private _sessionContext: SessionContext;
 
   private _globalCodeCell: FunctionEditor;
+  private _registryOutput: OutputAreaInteractRegistry;
 
   constructor(sessionContext: SessionContext, rendermime: IRenderMimeRegistry) {
     this._sessionContext = sessionContext;
@@ -54,8 +61,8 @@ export class GraphAPI {
 
   setWidgets(
     graphWidget: GraphEditor,
-    funContainer: BoxPanel,
-    nodeContainer: BoxPanel
+    funContainer: Panel,
+    nodeContainer: Panel
   ): void {
     this._graphWidget = graphWidget;
     this._funContainer = funContainer;
@@ -75,7 +82,37 @@ export class GraphAPI {
     );
     this._funContainer.addWidget(this._globalCodeCell);
     this._globalCodeCell.show();
+
+    this._registryOutput = new OutputAreaInteractRegistry({
+      model: new OutputAreaModel({}),
+      rendermime: this._rendermime
+    });
   }
+
+  /**--------------------------------------------------------
+   * Handle interactions with registry
+   */
+  async loadFunctionList(): Promise<void> {
+    // TODO: less ugly solution!
+    await OutputArea.execute(
+      'print(registry.get_nodes_as_json())',
+      this._registryOutput,
+      this._sessionContext
+    );
+    const nodeSchemas = JSON.parse(this._registryOutput.IOPubStream);
+
+    // Now we extract the node schemas
+    Object.values(nodeSchemas).forEach(schemaRaw => {
+      const schema = schemaRaw as IFunctionSchema;
+      this.createFunction(schema);
+      this._graphWidget.graphHandler.createFunction(schema);
+    });
+
+  }
+
+  /**--------------------------------------------------------
+   * Handle the single global cell
+   */
 
   setupGlobals(source: string): void {
     if (!this._globalCodeCell) {
@@ -86,16 +123,18 @@ export class GraphAPI {
     this._globalCodeCell.model.value.text = source;
   }
 
-  executeGlobals(): void {
+  async executeGlobals(): Promise<void | IExecuteReplyMsg> {
     if (!this._globalCodeCell) {
       console.error('Missing global code cell');
       return;
     }
     console.debug('Executing global code value');
-    this._globalCodeCell.execute(this._sessionContext);
+    return this._globalCodeCell.execute(this._sessionContext);
   }
 
-  //--------------------------------------------------------
+  /**--------------------------------------------------------
+   * Handle functions
+   */
   createFunction(schema: IFunctionSchema): void {
     // Create the editor zone
     const model = new CodeCellModel({});
@@ -108,7 +147,8 @@ export class GraphAPI {
     this._funContainer.addWidget(editor);
 
     // TODO: Add the function to the graph
-    this._graphWidget;
+    nodeFactory
+    this._graphWidget.graphHandler.loadComponents;
   }
 
   updateFunction(schema: IFunctionSchema): void {
@@ -160,8 +200,9 @@ export class GraphAPI {
     });
   }
 
-  //--------------------------------------------------------
-  //--------------------------------------------------------
+  /**--------------------------------------------------------
+   * Handle nodes
+   */
   createNode(schema: INodeSchema): void {
     // Create the editor zone
     const model = new CodeCellModel({});
