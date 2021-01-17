@@ -1,31 +1,14 @@
 import {
-  MainAreaWidget,
-  SessionContext,
-  Toolbar,
-  ToolbarButton,
-  sessionContextDialogs
+  SessionContext
 } from '@jupyterlab/apputils';
-
-// import { CodeCell, CodeCellModel } from '@jupyterlab/cells';
-
-import { CodeMirrorMimeTypeService } from '@jupyterlab/codemirror';
-import { OutputArea } from '@jupyterlab/outputarea';
-
-// import { KernelConnector } from '@jupyterlab/completer';
 
 import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
 
 import { SplitPanel } from '@lumino/widgets';
 
-import { GraphWidget } from './graph_widget';
-
 import { IMyManager } from './manager';
 
-import { execute, cloneOutput, OutputArea2 } from './utils';
-
-import { NodeCodeCell, NodeCodeCellModel } from './node';
-import { IExecuteCellOptions } from './graph';
-import { IExecuteReplyMsg } from '@jupyterlab/services/lib/kernel/messages';
+import { GraphEditionPanel } from './graph_panel';
 
 /**
  * The default mime type for the extension.
@@ -36,7 +19,6 @@ const MIME_TYPE = 'application/vnd.ipython.graph+json';
  * The class name added to the extension.
  */
 const CLASS_NAME = 'mimerenderer-ipygraph';
-const EDITOR_CLASS_NAME = 'mimerenderer-ipygraph-editor';
 
 /**
  * A widget for rendering ipygraph.
@@ -48,216 +30,90 @@ export class GraphWindow extends SplitPanel implements IRenderMime.IRenderer {
   constructor(options: IRenderMime.IRendererOptions, api: IMyPublicAPI) {
     super({
       ...options,
-      orientation: 'vertical'
+      orientation: 'vertical',
     });
-    this._mimeType = options.mimeType;
+    // this._mimeType = options.mimeType;
     this.addClass(CLASS_NAME);
 
-    const rendermime = api.manager.rendermime;
-    const sessions = api.manager.manager.sessions;
-    const kernelspecs = api.manager.manager.kernelspecs;
+    const { sessions } = api.manager.manager;
+    const { kernelspecs } = api.manager.manager;
 
     const sessionContext = new SessionContext({
       sessionManager: sessions,
       specsManager: kernelspecs,
-      name: 'IPyGraph Kernel'
+      name: 'IPyGraph Kernel',
     });
 
-    this._sessionContext = sessionContext;
-
-    const cellModel = new NodeCodeCellModel({});
-    const mimeService = new CodeMirrorMimeTypeService();
-    const cell = new NodeCodeCell({
-      model: cellModel,
-      rendermime
-    }).initializeState();
-    cell.outputHidden = false;
-    cell.outputsScrolled = false;
-    cell.outputArea.show();
-
-    this._output = cloneOutput(cell, rendermime);
-    this._output.show();
-
-    sessionContext.kernelChanged.connect(() => {
-      void sessionContext.session?.kernel?.info.then(info => {
-        const lang = info.language_info;
-        const mimeType = mimeService.getMimeTypeByLanguage(lang);
-        cellModel.mimeType = mimeType;
-      });
-
-      // // TODO: doesn't work
-      // const completionManager = api.manager.completionManager;
-      // const connector = new KernelConnector({
-      //   session: sessionContext.session
-      // });
-
-      // completionManager.register({
-      //   connector,
-      //   editor: cell.editor,
-      //   parent: this
-      // });
-    });
-
-    const editor = cell.editor;
-
-    editor.setOption('codeFolding', true);
-    editor.setOption('lineNumbers', true);
-
-    // Create a toolbar for the cell.
-    const reloadNodes = new ToolbarButton({
-      className: 'jp-DebuggerBugButton',
-      label: 'Reload nodes',
-      onClick: this.reloadNodes.bind(this)
-    });
-    const runGraph = new ToolbarButton({
-      className: 'jp-DebuggerBugButton',
-      label: 'Run Graph',
-      onClick: this.runGraph.bind(this)
-    });
-    const toolbar = new Toolbar();
-    toolbar.addItem('reload-nodes', reloadNodes);
-    toolbar.addItem('run-graph', runGraph);
-    toolbar.addItem('spacer', Toolbar.createSpacerItem());
-    toolbar.addItem('interrupt', Toolbar.createInterruptButton(sessionContext));
-    toolbar.addItem('restart', Toolbar.createRestartButton(sessionContext));
-    toolbar.addItem('name', Toolbar.createKernelNameItem(sessionContext));
-    toolbar.addItem('status', Toolbar.createKernelStatusItem(sessionContext));
-
-    // Graph widget callback
-    let previousPromise: Promise<IExecuteReplyMsg> = null;
-    const execCellCallback = async (
-      id: number,
-      options: IExecuteCellOptions
-    ): Promise<IExecuteReplyMsg> => {
-      // Build args
-      const cell = options.cell;
-      const args = options.parameters
-        .map((param: any) => {
-          const val = param.data;
-
-          if (param.data === null) {
-            return `${param.name}=__out_${param.node_id}`;
-          } else {
-            switch (typeof val) {
-              case 'number':
-                return `${param.name}=${param.data}`;
-              case 'boolean':
-                return `${param.name}=${param.data ? 'True' : 'False'}`;
-              case 'string':
-              default:
-                return `${param.name}="${param.data}"`;
-            }
-          }
-        })
-        .join(', ');
-      // Build code
-      const code = `__out_${id} = registry.nodes["${options.info.name}"](${args})\n__out_${id}`;
-      console.debug(`Executing ${code}`);
-      cell.model.value.text = code;
-
-      // Wait for previous reply to be done (or errored)
-      // will not be necessary once each node has its own outputarea
-      if (previousPromise) {
-        await previousPromise;
+    const widget = new GraphEditionPanel(
+      sessionContext,
+      api,
+      {
+        orientation: 'vertical'
       }
-
-      previousPromise = OutputArea.execute(
-        code,
-        cell.outputArea,
-        this._sessionContext
-      );
-      return previousPromise;
-    };
-    const box = new SplitPanel({});
-    const content = new GraphWidget({
-      execute: execCellCallback,
-      widget: box,
-      rendermime
-    });
-    const graphWidget = new MainAreaWidget<GraphWidget>({ content });
-    content.show();
-    graphWidget.show();
-
-    SplitPanel.setStretch(cell, 1);
-    box.addWidget(cell);
-
-    this._graphWidget = content;
-
-    // Lay out the widgets
-    cell.addClass(EDITOR_CLASS_NAME);
-
-    SplitPanel.setStretch(graphWidget, 1);
-    SplitPanel.setStretch(cell, 1);
-    SplitPanel.setStretch(box, 1);
-    this.addWidget(toolbar);
-    this.addWidget(graphWidget);
-    // this.addWidget(cell);
-    this.addWidget(box);
-    // this.addWidget(this._output);
-
-    // Wire code editor
-    this._cell = cell;
-
-    void sessionContext
-      .initialize()
-      .then(async value => {
-        if (value) {
-          await sessionContextDialogs.selectKernel(sessionContext);
-        }
-        await execute(
-          this._cell.model.value.text,
-          this._output,
-          this._sessionContext
-        );
-        await this.reloadNodes();
-      })
-      .catch(reason => {
-        console.error(
-          `Failed to initialize the session in ExamplePanel.\n${reason}`
-        );
-      });
-  }
-
-  private async reloadNodes(): Promise<void> {
-    // TODO: less ugly!
-    await execute(
-      'print(registry.get_nodes_as_json())',
-      this._output,
-      this._sessionContext
     );
-    const graph = this._graphWidget.graph;
-    graph.createComponents(this._output.graphData);
-    graph.loadGraph(this._graphData);
+    widget.show();
+    this.addWidget(widget);
+
+    // TODO: initialize session with content
+    // sessionContext
+    //   .initialize()
+    //   .then(async (value) => {
+    //     if (value) {
+    //       await sessionContextDialogs.selectKernel(sessionContext);
+    //     }
+    //     await execute(
+    //       this._cell.model.value.text,
+    //       this._output,
+    //       this._sessionContext
+    //     );
+    //     await this.reloadNodes();
+    //   })
+    //   .catch((reason) => {
+    //     console.error(
+    //       `Failed to initialize the session in ExamplePanel.\n${reason}`
+    //     );
+    //   });
   }
 
-  private runGraph(): void {
-    this._graphWidget.graph.graph.runStep();
-  }
+  // private async reloadNodes(): Promise<void> {
+  //   // TODO: less ugly!
+  //   await execute(
+  //     'print(registry.get_nodes_as_json())',
+  //     this._output,
+  //     this._sessionContext
+  //   );
+  //   const { graph } = this._graphWidget;
+  //   graph.createComponents(this._output.graphData);
+  //   graph.loadGraph(this._graphData);
+  // }
+
+  // private runGraph(): void {
+  //   this._graphWidget.graph.graph.runStep();
+  // }
 
   /**
    * Render ipygraph into this widget's node.
    */
-  renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-    const data = model.data[this._mimeType] as string;
-    const magicString = '___NODES = """';
-    const splitPoint = data.indexOf(magicString);
-    const endPoint = data.lastIndexOf('"""');
-    this._cell.model.value.text = data.substr(0, splitPoint);
-    this._graphData = data.substring(splitPoint + magicString.length, endPoint);
-    return;
+  async renderModel(model: IRenderMime.IMimeModel): Promise<void> {
+    // const data = model.data[this._mimeType] as string;
+    // const magicString = '___NODES = """';
+    // const splitPoint = data.indexOf(magicString);
+    // this._cell.model.value.text = data.substr(0, splitPoint);
+    // const endPoint = data.lastIndexOf('"""');
+    // this._graphData = data.substring(splitPoint + magicString.length, endPoint);
   }
 
-  private _mimeType: string;
+  // private _mimeType: string;
 
-  private _cell: NodeCodeCell;
+  // private _cell: NodeCodeCell;
 
-  private _sessionContext: SessionContext;
+  // private _sessionContext: SessionContext;
 
-  private _output: OutputArea2;
+  // private _output: OutputArea2;
 
-  private _graphWidget: GraphWidget;
+  // private _graphWidget: GraphWidget;
 
-  private _graphData: string;
+  // private _graphData: string;
 }
 
 export interface IMyPublicAPI {
@@ -268,7 +124,7 @@ export interface IMyPublicAPI {
  * A public API to communicate with the graph mime handler
  */
 export const MyPublicAPI: IMyPublicAPI = {
-  manager: null
+  manager: null,
 };
 
 /**
@@ -277,7 +133,7 @@ export const MyPublicAPI: IMyPublicAPI = {
 export const rendererFactory: IRenderMime.IRendererFactory = {
   safe: true,
   mimeTypes: [MIME_TYPE],
-  createRenderer: options => new GraphWindow(options, MyPublicAPI)
+  createRenderer: (options) => new GraphWindow(options, MyPublicAPI),
 };
 
 /**
@@ -292,15 +148,15 @@ const extension: IRenderMime.IExtension = {
     {
       name: 'ipygraph',
       mimeTypes: [MIME_TYPE],
-      extensions: ['.ipyg']
-    }
+      extensions: ['.ipyg'],
+    },
   ],
   documentWidgetFactoryOptions: {
     name: 'IPython Graph Viewer',
     primaryFileType: 'ipygraph',
     fileTypes: ['ipygraph'],
-    defaultFor: ['ipygraph']
-  }
+    defaultFor: ['ipygraph'],
+  },
 };
 
 export default extension;

@@ -5,8 +5,12 @@ import { OutputArea } from '@jupyterlab/outputarea';
 import { ISessionContext } from '@jupyterlab/apputils';
 
 import { Kernel, KernelMessage } from '@jupyterlab/services';
+
 import { CodeCell } from '@jupyterlab/cells';
+
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+
+import { IFunctionSchema, IGraphNodeSchema } from './graph_panel';
 
 /**
  * Execute code on an output area.
@@ -28,7 +32,7 @@ export async function execute(
   }
   const content: KernelMessage.IExecuteRequestMsg['content'] = {
     code,
-    stop_on_error: stopOnError
+    stop_on_error: stopOnError,
   };
 
   const kernel = sessionContext.session?.kernel;
@@ -41,7 +45,6 @@ export async function execute(
 }
 
 export class OutputArea2 extends OutputArea {
-
   graphData: string;
 
   set future(
@@ -52,12 +55,12 @@ export class OutputArea2 extends OutputArea {
   ) {
     super.future = value;
     const prev = value.onIOPub;
-    this.graphData = "";
+    this.graphData = '';
     value.onIOPub = (msg): void => {
       const msgType = msg.header.msg_type;
       if (msgType === 'stream') {
         const ret: any = msg.content;
-        this.graphData += ret['text'];
+        this.graphData += ret.text;
       } else {
         prev(msg);
       }
@@ -72,6 +75,50 @@ export function cloneOutput(
   return new OutputArea2({
     model: cell.model.outputs,
     contentFactory: cell.contentFactory,
-    rendermime
+    rendermime,
   });
 }
+
+
+abstract class Handler<T> {
+  private _schema: T;
+  private _callbacks: {[event: string]: Function[]};
+
+  constructor(schema: T) {
+    this._schema = schema;
+    this._callbacks = {};
+  }
+
+  private on(event: string, callback: (schema: T) => void): void {
+    const cb = (this._callbacks[event] || []);
+    cb.push(callback);
+  }
+
+  /** Call a function when the function is updated */
+  onUpdate(callback: (schema: T) => void): void {
+    this.on("updated", callback);
+  }
+
+  /** Call a function when the function changes */
+  onAdded(callback: (schema: T) => void): void {
+    this.on("added", callback);
+  }
+
+  /** Call a function when the function changes */
+  onRemoved(callback: (schema: T) => void): void {
+    this.on("removed", callback);
+  }
+
+  get schema(): T {
+    return this._schema;
+  }
+
+  set schema(newSchema: T) {
+    this._schema = newSchema;
+    this._callbacks["updated"].forEach(callback => {
+      callback(newSchema);
+    });
+  }
+}
+export class FunctionHandler extends Handler<IFunctionSchema> {};
+export class GraphNodeHandler extends Handler<IGraphNodeSchema> {};

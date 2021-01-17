@@ -36,6 +36,8 @@ export class MyManager implements IMyManager {
   }
 
   private _manager: ServiceManager.IManager;
+
   private _rendermime: IRenderMimeRegistry;
+
   private _completionManager: ICompletionManager;
 }

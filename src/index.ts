@@ -1,13 +1,13 @@
 import {
   ILayoutRestorer,
   JupyterFrontEnd,
-  JupyterFrontEndPlugin
+  JupyterFrontEndPlugin,
 } from '@jupyterlab/application';
 
 import {
   ICommandPalette,
   WidgetTracker,
-  MainAreaWidget
+  MainAreaWidget,
 } from '@jupyterlab/apputils';
 
 import { ILauncher } from '@jupyterlab/launcher';
@@ -47,9 +47,9 @@ const extension: JupyterFrontEndPlugin<IMyManager> = {
     IRenderMimeRegistry,
     ITranslator,
     ILayoutRestorer,
-    ICompletionManager
+    ICompletionManager,
   ],
-  activate: activate
+  activate,
 };
 
 /**
@@ -101,11 +101,11 @@ function activate(
   commands.addCommand(CommandIDs.create, {
     label: trans.__('Open the Node Editor Panel'),
     caption: trans.__('Open the Node Editor Panel'),
-    execute: createGraph
+    execute: createGraph,
   });
 
   // add items in command palette and menu
-  [CommandIDs.create].forEach(command => {
+  [CommandIDs.create].forEach((command) => {
     palette.addItem({ command, category });
     exampleMenu.addItem({ command });
   });
@@ -114,17 +114,17 @@ function activate(
   if (launcher) {
     launcher.add({
       command: CommandIDs.create,
-      category: category
+      category,
     });
   }
 
   const tracker = new WidgetTracker<MainAreaWidget<GraphWindow>>({
-    namespace: 'node_editor'
+    namespace: 'node_editor',
   });
 
   restorer.restore(tracker, {
     command: CommandIDs.create,
-    name: () => 'node_editor'
+    name: () => 'node_editor',
   });
 
   return MyPublicAPI.manager;
