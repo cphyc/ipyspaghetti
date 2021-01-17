@@ -1,4 +1,4 @@
-import { Toolbar, SessionContext } from '@jupyterlab/apputils';
+import { Toolbar, SessionContext, MainAreaWidget } from '@jupyterlab/apputils';
 
 import { BoxPanel, SplitPanel } from '@lumino/widgets';
 
@@ -7,6 +7,8 @@ import { IMyPublicAPI } from './mime';
 import { GraphEditor } from './graph_widget';
 
 import { GraphAPI } from './graph_api';
+
+import { IRenderMime } from '@jupyterlab/rendermime-interfaces';
 
 
 /** Inputs/outputs of functions */
@@ -31,13 +33,27 @@ export interface IGraphNodeSchema {
 
 const EDITOR_CLASS_NAME = 'mimerenderer-ipygraph-editor';
 
-export class GraphEditionPanel extends BoxPanel {
-  constructor(
-    sessionContext: SessionContext,
-    api: IMyPublicAPI,
-    options: BoxPanel.IOptions
-  ) {
-    super(options);
+/**
+ * The class name added to the extension.
+ */
+const CLASS_NAME = 'mimerenderer-ipygraph';
+export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
+  implements IRenderMime.IRenderer {
+  constructor(api: IMyPublicAPI, options: SplitPanel.IOptions) {
+    const content = new SplitPanel(options);
+    super({ content });
+
+    // this._mimeType = options.mimeType;
+    this.addClass(CLASS_NAME);
+
+    const { sessions } = api.manager.manager;
+    const { kernelspecs } = api.manager.manager;
+
+    const sessionContext = new SessionContext({
+      sessionManager: sessions,
+      specsManager: kernelspecs,
+      name: 'IPyGraph Kernel'
+    });
 
     this.addClass(EDITOR_CLASS_NAME);
 
@@ -46,8 +62,7 @@ export class GraphEditionPanel extends BoxPanel {
     const graphAPI = new GraphAPI(sessionContext, rendermime);
 
     // Create the widgets
-    const toolbar = createGraphToolbar(sessionContext);
-    toolbar.show();
+    createGraphToolbar(this.toolbar, sessionContext);
 
     const graphEditor = new GraphEditor(graphAPI);
     const functionEditorBox = new BoxPanel({});
@@ -62,24 +77,30 @@ export class GraphEditionPanel extends BoxPanel {
     codeBox.addWidget(functionEditorBox);
     codeBox.addWidget(nodeViewerBox);
 
-    // Setup edition zone
-    const editionZone = new SplitPanel({ orientation: 'vertical' });
+    // Setup content
     SplitPanel.setStretch(graphEditor, 1);
     SplitPanel.setStretch(codeBox, 1);
-    editionZone.addWidget(graphEditor);
-    editionZone.addWidget(codeBox);
+    content.addWidget(graphEditor);
+    content.addWidget(codeBox);
+  }
 
-    // Add the widget
-    BoxPanel.setStretch(toolbar, 0);
-    BoxPanel.setStretch(editionZone, 1);
-    this.addWidget(toolbar);
-    this.addWidget(editionZone);
+  /**
+   * Render ipygraph into this widget's node.
+   */
+  async renderModel(model: IRenderMime.IMimeModel): Promise<void> {
+    // const data = model.data[this._mimeType] as string;
+    // const magicString = '___NODES = """';
+    // const splitPoint = data.indexOf(magicString);
+    // this._cell.model.value.text = data.substr(0, splitPoint);
+    // const endPoint = data.lastIndexOf('"""');
+    // this._graphData = data.substring(splitPoint + magicString.length, endPoint);
   }
 }
 
-
-function createGraphToolbar(sessionContext: SessionContext): Toolbar {
-  const toolbar = new Toolbar();
+function createGraphToolbar(
+  toolbar: Toolbar,
+  sessionContext: SessionContext
+): void {
   // toolbar.addItem('reload-nodes', reloadNodes);
   // toolbar.addItem('run-graph', runGraph);
   toolbar.addItem('spacer', Toolbar.createSpacerItem());
@@ -87,6 +108,4 @@ function createGraphToolbar(sessionContext: SessionContext): Toolbar {
   toolbar.addItem('restart', Toolbar.createRestartButton(sessionContext));
   toolbar.addItem('name', Toolbar.createKernelNameItem(sessionContext));
   toolbar.addItem('status', Toolbar.createKernelStatusItem(sessionContext));
-
-  return toolbar;
 }

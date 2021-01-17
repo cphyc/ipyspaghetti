@@ -1,14 +1,10 @@
 import {
   ILayoutRestorer,
   JupyterFrontEnd,
-  JupyterFrontEndPlugin,
+  JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
-import {
-  ICommandPalette,
-  WidgetTracker,
-  MainAreaWidget,
-} from '@jupyterlab/apputils';
+import { ICommandPalette, WidgetTracker } from '@jupyterlab/apputils';
 
 import { ILauncher } from '@jupyterlab/launcher';
 
@@ -22,9 +18,11 @@ import { ICompletionManager } from '@jupyterlab/completer';
 
 import { Menu } from '@lumino/widgets';
 
-import { MyPublicAPI, GraphWindow } from './mime';
+import { MyPublicAPI } from './mime';
 
 import { IMyManager, MyManager } from './manager';
+
+import { GraphEditionPanel } from './graph_panel';
 
 /**
  * The command IDs used by the console plugin.
@@ -114,17 +112,17 @@ function activate(
   if (launcher) {
     launcher.add({
       command: CommandIDs.create,
-      category,
+      category
     });
   }
 
-  const tracker = new WidgetTracker<MainAreaWidget<GraphWindow>>({
-    namespace: 'node_editor',
+  const tracker = new WidgetTracker<GraphEditionPanel>({
+    namespace: 'node_editor'
   });
 
   restorer.restore(tracker, {
     command: CommandIDs.create,
-    name: () => 'node_editor',
+    name: () => 'node_editor'
   });
 
   return MyPublicAPI.manager;

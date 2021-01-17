@@ -125,7 +125,7 @@ export class GraphAPI {
   createNode(schema: INodeSchema): void {
     // Create the editor zone
     const model = new CodeCellModel({});
-    model.value.text = NodeViewerNamespace.createCode(schema);
+    model.value.text = NodeViewer.createCode(schema);
     const viewer = new NodeViewer(schema, {
       model,
       rendermime: this._rendermime
@@ -141,7 +141,7 @@ export class GraphAPI {
     this._nodeContainer.widgets.forEach(w => {
       const w2 = w as NodeViewer;
       if (w2.schema.id === schema.id) {
-        w2.model.value.text = NodeViewerNamespace.createCode(schema);
+        w2.model.value.text = NodeViewer.createCode(schema);
       }
     });
 
@@ -222,7 +222,7 @@ class FunctionEditor extends GenericCodeCell<IFunctionSchema> {
 }
 
 /** Show a node */
-export class NodeViewer extends GenericCodeCell<INodeSchema> {
+class NodeViewer extends GenericCodeCell<INodeSchema> {
   constructor(schema: INodeSchema, options: CodeCell.IOptions) {
     super(schema, options);
     const { editor } = this;
@@ -230,7 +230,7 @@ export class NodeViewer extends GenericCodeCell<INodeSchema> {
   }
 }
 
-namespace NodeViewerNamespace {
+namespace NodeViewer {
   export function createCode(schema: INodeSchema): string {
     const args = Object.entries(schema.inputs).map(([paramName, input]) => {
         let code = `${paramName}=`;
@@ -251,6 +251,4 @@ namespace NodeViewerNamespace {
     code += `__out_${schema.id}`;
     return code;
   }
-
-  NodeViewer;
 }
