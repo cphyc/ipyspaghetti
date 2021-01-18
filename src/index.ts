@@ -81,11 +81,7 @@ function activate(
   // let widget: MainAreaWidget<GraphWindow>;
   const mgr = new MyManager(manager, rendermime, completionManager);
   MyPublicAPI.manager = mgr;
-  /**
-   * Creates a example panel.
-   *
-   * @returns The panel
-   */
+
   function createGraph(): void {
     console.debug('No-op');
   }
