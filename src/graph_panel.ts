@@ -2,7 +2,8 @@ import {
   Toolbar,
   SessionContext,
   MainAreaWidget,
-  sessionContextDialogs
+  sessionContextDialogs,
+  ToolbarButton
 } from '@jupyterlab/apputils';
 
 import { BoxPanel, SplitPanel } from '@lumino/widgets';
@@ -75,9 +76,6 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
     const { rendermime } = api.manager;
     const graphAPI = new GraphAPI(sessionContext, rendermime);
 
-    // Create the widgets
-    createGraphToolbar(this.toolbar, sessionContext);
-
     const graphEditor = new GraphEditor(graphAPI);
     const functionEditorBox = new BoxPanel({});
     const nodeViewerBox = new BoxPanel({});
@@ -110,8 +108,11 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
         for (const box of [nodeViewerBox, functionEditorBox]) {
           box.widgets.forEach(w => ((w as CodeCell).model.mimeType = mimeType));
         }
+        // We execute the globals then list functions available
         await graphAPI.executeGlobals();
         await graphAPI.loadFunctionList();
+        await graphAPI.loadTypeInheritance();
+        await graphAPI.setupGraph();
       });
     });
 
@@ -133,6 +134,16 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
         );
       });
     this._sessionContext;
+
+    const runGraph = new ToolbarButton({
+      className: 'jp-DebuggerBugButton',
+      label: 'Run Graph',
+      onClick: (): void => {
+        graphEditor?.graphHandler?.graph?.runStep();
+      }
+    });
+    this.toolbar.addItem('run-graph', runGraph);
+    populateGraphToolbar(this.toolbar, sessionContext);
   }
 
   /**
@@ -140,27 +151,24 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
    */
   async renderModel(model: IRenderMime.IMimeModel): Promise<void> {
     // Launch a kernel
-    console.log('HERE');
     const mimeType = this._mimeRendererOptions.mimeType;
-    const code = model.data[mimeType] as string;
-    await this._graphAPI.setupGlobals(code);
-    // TODO: load nodes
+    const data = model.data[mimeType] as string;
+    const magicString = '___NODES = """';
+    const splitPoint = data.indexOf(magicString);
 
-    // const data = model.data[this._mimeType] as string;
-    // const magicString = '___NODES = """';
-    // const splitPoint = data.indexOf(magicString);
-    // this._cell.model.value.text = data.substr(0, splitPoint);
-    // const endPoint = data.lastIndexOf('"""');
-    // this._graphData = data.substring(splitPoint + magicString.length, endPoint);
+    const code = data.substring(0, splitPoint);
+    this._graphAPI.setupGlobals(code);
+
+    const endPoint = data.lastIndexOf('"""');
+    const graphData = data.substring(splitPoint + magicString.length, endPoint);
+    this._graphAPI.graphData = JSON.parse(graphData);
   }
 }
 
-function createGraphToolbar(
+function populateGraphToolbar(
   toolbar: Toolbar,
   sessionContext: SessionContext
 ): void {
-  // toolbar.addItem('reload-nodes', reloadNodes);
-  // toolbar.addItem('run-graph', runGraph);
   toolbar.addItem('spacer', Toolbar.createSpacerItem());
   toolbar.addItem('interrupt', Toolbar.createInterruptButton(sessionContext));
   toolbar.addItem('restart', Toolbar.createRestartButton(sessionContext));

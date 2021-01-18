@@ -106,6 +106,8 @@ class NodeRegistry:
                     self._resolve_parent(t2_str, t1_str, type_map, parent_types)
         return parent_types
 
+    def get_parent_types_as_json(self) -> str:
+        return json.dumps(self.get_parent_types())
 
 registry = NodeRegistry()
 

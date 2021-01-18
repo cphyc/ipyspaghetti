@@ -38,10 +38,15 @@ export interface INodeSchemaIO {
   input: INodeSchema | any;
 }
 export interface INodeSchema {
-  id: number,
+  id: number;
   function: IFunctionSchema;
   inputs: { [paramName: string]: INodeSchemaIO };
 }
+
+export const GLOBAL_NAMESPACE_FUNCTION_NAME = 'Global namespace';
+
+// TODO: automatically infer this
+const DEFAULT_MIME_TYPE = 'text/x-ipython';
 
 export class GraphAPI {
   private _graphWidget: GraphEditor;
@@ -53,6 +58,8 @@ export class GraphAPI {
 
   private _globalCodeCell: FunctionEditor;
   private _registryOutput: OutputAreaInteractRegistry;
+  private _graphData: object;
+  private _typeInheritance: { [from: string]: string };
 
   constructor(sessionContext: SessionContext, rendermime: IRenderMimeRegistry) {
     this._sessionContext = sessionContext;
@@ -72,7 +79,7 @@ export class GraphAPI {
       {
         inputs: {},
         outputs: {},
-        name: 'Global namespace',
+        name: GLOBAL_NAMESPACE_FUNCTION_NAME,
         source: ''
       },
       {
@@ -107,13 +114,31 @@ export class GraphAPI {
       this.createFunction(schema);
       this._graphWidget.graphHandler.createFunction(schema);
     });
-
   }
+
+  async loadTypeInheritance(): Promise<void> {
+    // TODO: less ugly solution!
+    await OutputArea.execute(
+      'print(registry.get_parent_types_as_json())',
+      this._registryOutput,
+      this._sessionContext
+    );
+    this._typeInheritance = JSON.parse(this._registryOutput.IOPubStream);
+  }
+
+  getParentType(baseType: string): string {
+    if (baseType in this._typeInheritance) {
+      return this._typeInheritance[baseType];
+    } else {
+      return baseType;
+    }
+  }
+
 
   /**--------------------------------------------------------
    * Handle the single global cell
    */
-
+  /** Set the value of the global imports */
   setupGlobals(source: string): void {
     if (!this._globalCodeCell) {
       console.error('Missing global code cell');
@@ -123,6 +148,7 @@ export class GraphAPI {
     this._globalCodeCell.model.value.text = source;
   }
 
+  /** Execute global imports */
   async executeGlobals(): Promise<void | IExecuteReplyMsg> {
     if (!this._globalCodeCell) {
       console.error('Missing global code cell');
@@ -132,12 +158,30 @@ export class GraphAPI {
     return this._globalCodeCell.execute(this._sessionContext);
   }
 
+  set graphData(graphData: object) {
+    this._graphData = graphData;
+  }
+
+  get graphData(): object {
+    if (!this._graphData) {
+      return {};
+    } else {
+      return this._graphData;
+    }
+  }
+
+  /** Set up the graph */
+  setupGraph(): boolean | undefined {
+    return this._graphWidget.graphHandler.graph.configure(this.graphData);
+  }
+
   /**--------------------------------------------------------
    * Handle functions
    */
   createFunction(schema: IFunctionSchema): void {
     // Create the editor zone
     const model = new CodeCellModel({});
+    model.mimeType = DEFAULT_MIME_TYPE;
     model.value.text = schema.source;
     const editor = new FunctionEditor(schema, {
       model,
@@ -147,7 +191,7 @@ export class GraphAPI {
     this._funContainer.addWidget(editor);
 
     // TODO: Add the function to the graph
-    nodeFactory
+    nodeFactory;
     this._graphWidget.graphHandler.loadComponents;
   }
 
@@ -200,12 +244,24 @@ export class GraphAPI {
     });
   }
 
+  deselectFunction(): void {
+    this._funContainer.widgets.forEach(w => {
+      const w2 = w as FunctionEditor;
+      if (w2.schema.name === GLOBAL_NAMESPACE_FUNCTION_NAME) {
+        w.show();
+      } else {
+        w.hide();
+      }
+    });
+  }
+
   /**--------------------------------------------------------
    * Handle nodes
    */
   createNode(schema: INodeSchema): void {
     // Create the editor zone
     const model = new CodeCellModel({});
+    model.mimeType = DEFAULT_MIME_TYPE;
     model.value.text = NodeViewer.createCode(schema);
     const viewer = new NodeViewer(schema, {
       model,
@@ -239,7 +295,7 @@ export class GraphAPI {
   }
 
   executeNode(schema: INodeSchema): Promise<void | IExecuteReplyMsg> {
-    const tmp = this._funContainer.widgets.filter(w => {
+    const tmp = this._nodeContainer.widgets.filter(w => {
       const w2 = w as NodeViewer;
       return w2.schema.id === schema.id;
     });
@@ -265,6 +321,10 @@ export class GraphAPI {
       }
     });
     // TODO: inform the graph we've selected a cell
+  }
+
+  deselectNode(): void {
+    this._nodeContainer.widgets.forEach(w => w.hide());
   }
 
 }
@@ -294,20 +354,13 @@ abstract class GenericCodeCell<T> extends CodeCell {
 }
 
 /** Edit a function */
-class FunctionEditor extends GenericCodeCell<IFunctionSchema> {
-  constructor(schema: IFunctionSchema, options: CodeCell.IOptions) {
-    super(schema, options);
-    const { editor } = this;
-    editor.setOption('readOnly', false);
-  }
-}
+class FunctionEditor extends GenericCodeCell<IFunctionSchema> {}
 
 /** Show a node */
 class NodeViewer extends GenericCodeCell<INodeSchema> {
   constructor(schema: INodeSchema, options: CodeCell.IOptions) {
     super(schema, options);
-    const { editor } = this;
-    editor.setOption('readOnly', true);
+    this.readOnly = true;
   }
 }
 
@@ -316,7 +369,7 @@ namespace NodeViewer {
     const args = Object.entries(schema.inputs).map(([paramName, input]) => {
         let code = `${paramName}=`;
         if (input.type === 'node') {
-          code += `__out${(input.input as INodeSchema).id}`;
+          code += `__out_${(input.input as INodeSchema).id}`;
         } else {
           const val: any = input.input;
           if (typeof val === 'boolean') {
