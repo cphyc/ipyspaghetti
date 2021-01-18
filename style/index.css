@@ -6,6 +6,10 @@
   left: 0;
 }
 
-.mimerenderer-ipygraph-editor {
+.jp-node-viewer {
+  overflow-y: scroll;
+}
+
+.jp-function-editor {
   overflow-y: scroll;
 }

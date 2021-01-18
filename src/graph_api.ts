@@ -45,6 +45,10 @@ export interface INodeSchema {
 
 export const GLOBAL_NAMESPACE_FUNCTION_NAME = 'Global namespace';
 
+export const NODE_VIEWER_CLASS = 'jp-node-viewer';
+
+export const FUNCTION_EDITOR_CLASS = 'jp-function-editor';
+
 // TODO: automatically infer this
 const DEFAULT_MIME_TYPE = 'text/x-ipython';
 
@@ -354,12 +358,18 @@ abstract class GenericCodeCell<T> extends CodeCell {
 }
 
 /** Edit a function */
-class FunctionEditor extends GenericCodeCell<IFunctionSchema> {}
+class FunctionEditor extends GenericCodeCell<IFunctionSchema> {
+  constructor(schema: IFunctionSchema, options: CodeCell.IOptions) {
+    super(schema, options);
+    this.addClass(FUNCTION_EDITOR_CLASS);
+  }
+}
 
 /** Show a node */
 class NodeViewer extends GenericCodeCell<INodeSchema> {
   constructor(schema: INodeSchema, options: CodeCell.IOptions) {
     super(schema, options);
+    this.addClass(NODE_VIEWER_CLASS);
     this.readOnly = true;
   }
 }
