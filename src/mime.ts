@@ -17,7 +17,7 @@ export interface IMyPublicAPI {
  * A public API to communicate with the graph mime handler
  */
 export const MyPublicAPI: IMyPublicAPI = {
-  manager: null,
+  manager: null
 };
 
 /**
@@ -27,7 +27,11 @@ export const rendererFactory: IRenderMime.IRendererFactory = {
   safe: true,
   mimeTypes: [MIME_TYPE],
   createRenderer: (options: IRenderMime.IRendererOptions) => {
-    return new GraphEditionPanel(MyPublicAPI, { orientation: 'vertical' }, options);
+    return new GraphEditionPanel(
+      MyPublicAPI,
+      { orientation: 'vertical' },
+      options
+    );
   }
 };
 
@@ -43,15 +47,15 @@ const extension: IRenderMime.IExtension = {
     {
       name: 'ipygraph',
       mimeTypes: [MIME_TYPE],
-      extensions: ['.ipyg'],
-    },
+      extensions: ['.ipyg']
+    }
   ],
   documentWidgetFactoryOptions: {
     name: 'IPython Graph Viewer',
     primaryFileType: 'ipygraph',
     fileTypes: ['ipygraph'],
-    defaultFor: ['ipygraph'],
-  },
+    defaultFor: ['ipygraph']
+  }
 };
 
 export default extension;

@@ -24,6 +24,8 @@ import { IMyManager, MyManager } from './manager';
 
 import { GraphEditionPanel } from './graph_panel';
 
+import { IPygViewerFactory } from './widget';
+
 /**
  * The command IDs used by the console plugin.
  */
@@ -45,9 +47,9 @@ const extension: JupyterFrontEndPlugin<IMyManager> = {
     IRenderMimeRegistry,
     ITranslator,
     ILayoutRestorer,
-    ICompletionManager,
+    ICompletionManager
   ],
-  activate,
+  activate
 };
 
 /**
@@ -74,6 +76,16 @@ function activate(
 ): IMyManager {
   console.log('JupyterLab extension node_editor is activated!');
 
+  const factory = new IPygViewerFactory({
+    name: 'IPygraph madafuka',
+    fileTypes: ['ipygraph', 'text'],
+    defaultFor: ['ipygraph'],
+    readOnly: false,
+    translator
+  });
+
+  app.docRegistry.addWidgetFactory(factory);
+
   const manager = app.serviceManager;
   const { commands } = app;
   const category = 'Extension Examples';
@@ -99,7 +111,7 @@ function activate(
   });
 
   // add items in command palette and menu
-  [CommandIDs.create].forEach((command) => {
+  [CommandIDs.create].forEach(command => {
     palette.addItem({ command, category });
     exampleMenu.addItem({ command });
   });

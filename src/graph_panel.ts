@@ -6,6 +6,10 @@ import {
   ToolbarButton
 } from '@jupyterlab/apputils';
 
+import {
+  DocumentRegistry
+} from '@jupyterlab/docregistry';
+
 import { BoxPanel, SplitPanel } from '@lumino/widgets';
 
 import { IMyPublicAPI } from './mime';
@@ -52,15 +56,19 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
   private _sessionContext: SessionContext;
   private _mimeRendererOptions: IRenderMime.IRendererOptions;
   private _graphAPI: GraphAPI;
+  private _context: DocumentRegistry.Context;
+
   // private _mimeRendererOptions: IRenderMime.IRendererOptions;
   constructor(
     api: IMyPublicAPI,
-    options: SplitPanel.IOptions,
-    mimeRendererOptions: IRenderMime.IRendererOptions
+    options?: GraphEditionPanel.IOptions,
+    mimeRendererOptions?: IRenderMime.IRendererOptions,
   ) {
-    const content = new SplitPanel(options);
+    const { context, ...otherOptions } = options;
+    const content = new SplitPanel(otherOptions);
     super({ content });
 
+    this._context = context;
     const { sessions, kernelspecs } = api.manager.manager;
 
     const sessionContext = new SessionContext({
@@ -98,6 +106,11 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
     SplitPanel.setStretch(codeBox, 1);
     content.addWidget(graphEditor);
     content.addWidget(codeBox);
+
+    // Data from file has been red
+    options.context?.ready.then(() => {
+      this.loadData();
+    });
 
     // Change the mime type of cells when the kernel has loaded
     const mimeService = new CodeMirrorMimeTypeService();
@@ -145,6 +158,19 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
     this.toolbar.addItem('run-graph', runGraph);
     populateGraphToolbar(this.toolbar, sessionContext);
   }
+  protected loadData(): void {
+    const data = this._context.model.toString();
+
+    const magicString = '___NODES = """';
+    const splitPoint = data.indexOf(magicString);
+
+    const code = data.substring(0, splitPoint);
+    this._graphAPI.setupGlobals(code);
+
+    const endPoint = data.lastIndexOf('"""');
+    const graphData = data.substring(splitPoint + magicString.length, endPoint);
+    this._graphAPI.graphData = JSON.parse(graphData);
+  }
 
   /**
    * Render ipygraph into this widget's node.
@@ -174,4 +200,16 @@ function populateGraphToolbar(
   toolbar.addItem('restart', Toolbar.createRestartButton(sessionContext));
   toolbar.addItem('name', Toolbar.createKernelNameItem(sessionContext));
   toolbar.addItem('status', Toolbar.createKernelStatusItem(sessionContext));
+}
+
+export namespace GraphEditionPanel {
+  /**
+   * Instantiation options for CSV widgets.
+   */
+  export interface IOptions extends SplitPanel.IOptions {
+    /**
+     * The document context for the CSV being rendered by the widget.
+     */
+    context?: DocumentRegistry.Context;
+  }
 }
