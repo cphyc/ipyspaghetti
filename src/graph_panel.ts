@@ -155,9 +155,20 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
         graphEditor?.graphHandler?.graph?.runStep();
       }
     });
-    this.toolbar.addItem('run-graph', runGraph);
+    this.toolbar.addItem('ipygraph:run-graph', runGraph);
+
+    const save = new ToolbarButton({
+      className: 'jp-DebuggerBugButton',
+      label: 'Save',
+      onClick: async (): Promise<void> => {
+        return this.save();
+      }
+    });
+    this.toolbar.addItem('ipygraph:save', save);
+
     populateGraphToolbar(this.toolbar, sessionContext);
   }
+
   protected loadData(): void {
     const data = this._context.model.toString();
 
@@ -170,6 +181,12 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
     const endPoint = data.lastIndexOf('"""');
     const graphData = data.substring(splitPoint + magicString.length, endPoint);
     this._graphAPI.graphData = JSON.parse(graphData);
+  }
+
+  protected save(): Promise<void> {
+    const data = this._graphAPI.dataAsString();
+    this._context.model.fromString(data);
+    return this._context.save();
   }
 
   /**

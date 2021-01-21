@@ -138,7 +138,6 @@ export class GraphAPI {
     }
   }
 
-
   /**--------------------------------------------------------
    * Handle the single global cell
    */
@@ -172,6 +171,33 @@ export class GraphAPI {
     } else {
       return this._graphData;
     }
+  }
+
+  // TODO: should call this every time the graph changes. Use signal?
+  updateGraphData(): object {
+    this._graphData = this._graphWidget.graphHandler.graph.serialize();
+    return this.graphData;
+  }
+
+  dataAsString(): string {
+    // TODO: this should be done automatically whenever the graph changes; leaving this for now.
+    const graphData = this.updateGraphData();
+    let data = this._globalCodeCell.model.value.text;
+
+    data +=
+      '\n' +
+      this._funContainer.widgets
+        .map(w => {
+          const w2 = w as FunctionEditor;
+          if (w2.schema.name === GLOBAL_NAMESPACE_FUNCTION_NAME) {
+            return '';
+          }
+          return w2.model.value.text;
+        })
+        .join('\n');
+
+    data += `\n\n___NODES = """${JSON.stringify(graphData)}"""\n`;
+    return data;
   }
 
   /** Set up the graph */
@@ -330,7 +356,6 @@ export class GraphAPI {
   deselectNode(): void {
     this._nodeContainer.widgets.forEach(w => w.hide());
   }
-
 }
 
 abstract class GenericCodeCell<T> extends CodeCell {
@@ -376,7 +401,8 @@ class NodeViewer extends GenericCodeCell<INodeSchema> {
 
 namespace NodeViewer {
   export function createCode(schema: INodeSchema): string {
-    const args = Object.entries(schema.inputs).map(([paramName, input]) => {
+    const args = Object.entries(schema.inputs)
+      .map(([paramName, input]) => {
         let code = `${paramName}=`;
         if (input.type === 'node') {
           code += `__out_${(input.input as INodeSchema).id}`;
