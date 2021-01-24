@@ -36,6 +36,7 @@ export interface IFunctionSchema {
 export interface INodeSchemaIO {
   type: 'node' | 'value';
   input: INodeSchema | any;
+  optional: boolean;
 }
 export interface INodeSchema {
   id: number;
@@ -470,6 +471,10 @@ class NodeViewer extends GenericCodeCell<INodeSchema> {
 namespace NodeViewer {
   export function createCode(schema: INodeSchema): string {
     const args = Object.entries(schema.inputs)
+      .filter(([_paramName, input]) => {
+        // Discard empty optional values
+        return !(input.optional && input.input === null);
+      })
       .map(([paramName, input]) => {
         let code = `${paramName}=`;
         if (input.type === 'node') {
@@ -478,8 +483,10 @@ namespace NodeViewer {
           const val: any = input.input;
           if (typeof val === 'boolean') {
             code += val ? 'True' : 'False';
-          } else {
+          } else if (val !== null) {
             code += JSON.stringify(val);
+          } else {
+            code += 'MISSING';
           }
         }
         return code;

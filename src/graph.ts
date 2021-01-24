@@ -255,28 +255,31 @@ class PyLGraphNode extends LGraphNode {
     const inputs: { [paramName: string]: INodeSchemaIO } = {};
     this.inputs.forEach((input, islot) => {
       const ancestor = this.getInputNode(islot);
+      const optional = this.schema.inputs[input.name].optional;
       if (!ancestor) {
-        inputs[input.name] = { type: 'value', input: null };
+        inputs[input.name] = { type: 'value', input: null, optional };
         return;
       }
 
       if (ancestor.properties['type'] === PYTHON_NODE) {
         let inputData;
         if (depth > 0) {
-          inputData = (ancestor as PyLGraphNode).buildNodeSchema(depth-1);
+          inputData = (ancestor as PyLGraphNode).buildNodeSchema(depth - 1);
         } else {
           inputData = this.getInputData(islot);
         }
         inputs[input.name] = {
           type: 'node',
-          input: inputData
-        } as INodeSchemaIO;
+          input: inputData,
+          optional
+        };
       } else {
         const inputData = this.getInputData(islot, true);
         inputs[input.name] = {
           type: 'value',
-          input: inputData
-        } as INodeSchemaIO;
+          input: inputData,
+          optional
+        };
       }
     });
 
