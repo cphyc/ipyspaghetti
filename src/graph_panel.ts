@@ -119,11 +119,15 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
         for (const box of [nodeViewerBox, functionEditorBox]) {
           box.widgets.forEach(w => ((w as CodeCell).model.mimeType = mimeType));
         }
-        // We execute the globals then list functions available
+        // Execute globals cell...
         await graphAPI.executeGlobals();
+        // Execute node code source...
         await graphAPI.executeNodeSource();
+        // Gather list of loadable nodes...
         await graphAPI.loadFunctionList();
+        // Gather type inheritance to match sockets...
         await graphAPI.loadTypeInheritance();
+        // and finally setup the graph
         await graphAPI.setupGraph();
       });
     });

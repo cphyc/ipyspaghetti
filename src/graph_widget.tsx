@@ -63,6 +63,7 @@ export class GraphEditor extends ReactWidget {
   render(): JSX.Element {
     return (
       <GraphComponent
+        data-jp-suppress-context-menu
         setGraph={this.setGraph}
         graphId={this._graphId}
         width={this._width}
