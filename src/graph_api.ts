@@ -221,7 +221,7 @@ export class GraphAPI {
 
     // TODO: this should be done automatically whenever the graph changes; leaving this for now.
     const graphData = this.updateGraphData();
-    const graph = JSON.stringify(graphData);
+    const graph = JSON.stringify(graphData, null, 2);
 
     const data = GraphAPI.buildData({ globals, nodes, graph });
 
@@ -417,10 +417,12 @@ export namespace GraphAPI {
   }
 
   export function buildData(data: GraphDataSchema): string {
-    const graph = `${GRAPH_VARIABLE} = """${data.graph}"""\n`;
-    return `${GraphAPI.GLOBALS_MAGIC}\n${data.globals}\n` +
-      `${GraphAPI.NODES_MAGIC}\n${data.nodes}\n` +
-      `${GraphAPI.GRAPH_MAGIC}\n${graph}\n`;
+    const graph = `${GRAPH_VARIABLE} = """${data.graph}"""`;
+    return (
+      `${GraphAPI.GLOBALS_MAGIC}\n${data.globals.trim()}\n\n\n` +
+      `${GraphAPI.NODES_MAGIC}\n${data.nodes.trim()}\n\n\n` +
+      `${GraphAPI.GRAPH_MAGIC}\n${graph}\n`
+    );
   }
 }
 

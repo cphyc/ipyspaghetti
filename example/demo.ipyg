@@ -5,7 +5,7 @@ import yt
 from yt.data_objects.static_output import Dataset
 from yt.visualization.plot_window import PlotWindow
 
-from node_editor.graph import register_node, registry
+from node_editor.graph import register_node
 
 
 # % IPYS: Nodes
@@ -28,6 +28,149 @@ def projection_plot(
     p = yt.ProjectionPlot(ds, axis, field)
     return p
 
-# % IPYS: Graph
-___GRAPH = """{"last_node_id":1,"last_link_id":0,"nodes":[],"links":[],"groups":[],"config":{},"extra":{},"version":0.4}"""
 
+# % IPYS: Graph
+___GRAPH = """{
+  "last_node_id": 3,
+  "last_link_id": 1,
+  "nodes": [
+    {
+      "id": 2,
+      "type": "mynodes/load_dataset",
+      "pos": {
+        "0": 296,
+        "1": 135,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0
+      },
+      "size": {
+        "0": 140,
+        "1": 26
+      },
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "path",
+          "type": "string",
+          "link": null,
+          "color_on": "#EBFF66",
+          "color_off": "#E7FF4D",
+          "shape": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "<class 'yt.data_objects.static_output.Dataset'>",
+          "links": [
+            1
+          ],
+          "color_on": "#66F2FF",
+          "color_off": "#4DF0FF",
+          "shape": 4
+        }
+      ],
+      "properties": {
+        "state": 1,
+        "count": 0,
+        "previous_input": [
+          null
+        ],
+        "type": 1
+      },
+      "boxcolor": "green"
+    },
+    {
+      "id": 3,
+      "type": "mynodes/projection_plot",
+      "pos": {
+        "0": 493,
+        "1": 133,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0
+      },
+      "size": {
+        "0": 140,
+        "1": 66
+      },
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "ds",
+          "type": "<class 'yt.data_objects.static_output.Dataset'>",
+          "link": 1,
+          "color_on": "#66F2FF",
+          "color_off": "#4DF0FF",
+          "shape": 4
+        },
+        {
+          "name": "axis",
+          "type": "string",
+          "link": null,
+          "color_on": "#EBFF66",
+          "color_off": "#E7FF4D",
+          "shape": 1
+        },
+        {
+          "name": "field",
+          "type": "<class 'tuple'>[(typing.Any, typing.Any)])",
+          "link": null,
+          "color_on": "#FFDB66",
+          "color_off": "#FFD54D",
+          "shape": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "<class 'yt.visualization.plot_window.PlotWindow'>",
+          "links": null,
+          "color_on": "#F5FF66",
+          "color_off": "#F3FF4D",
+          "shape": 4
+        }
+      ],
+      "properties": {
+        "state": 1,
+        "count": 0,
+        "previous_input": [
+          1,
+          null,
+          null
+        ],
+        "type": 1
+      },
+      "boxcolor": "green"
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      3,
+      0,
+      "<class 'yt.data_objects.static_output.Dataset'>"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4
+}"""
