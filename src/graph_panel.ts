@@ -6,9 +6,7 @@ import {
   ToolbarButton
 } from '@jupyterlab/apputils';
 
-import {
-  DocumentRegistry
-} from '@jupyterlab/docregistry';
+import { DocumentRegistry } from '@jupyterlab/docregistry';
 
 import { BoxPanel, SplitPanel } from '@lumino/widgets';
 
@@ -123,6 +121,7 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
         }
         // We execute the globals then list functions available
         await graphAPI.executeGlobals();
+        await graphAPI.executeNodeSource();
         await graphAPI.loadFunctionList();
         await graphAPI.loadTypeInheritance();
         await graphAPI.setupGraph();
@@ -169,43 +168,37 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
     populateGraphToolbar(this.toolbar, sessionContext);
   }
 
-  protected loadData(): void {
-    const data = this._context.model.toString();
-
-    const magicString = '___NODES = """';
-    const splitPoint = data.indexOf(magicString);
-
-    const code = data.substring(0, splitPoint);
-    this._graphAPI.setupGlobals(code);
-
-    const endPoint = data.lastIndexOf('"""');
-    const graphData = data.substring(splitPoint + magicString.length, endPoint);
-    this._graphAPI.graphData = JSON.parse(graphData);
-  }
-
   protected save(): Promise<void> {
     const data = this._graphAPI.dataAsString();
     this._context.model.fromString(data);
     return this._context.save();
   }
 
+  protected load(data: string): void {
+    const { globals, nodes, graph } = GraphAPI.splitData(data);
+
+    this._graphAPI.setupGlobals(globals);
+    this._graphAPI.setupNodeSource(nodes);
+    this._graphAPI.graphData = JSON.parse(graph);
+  }
+
   /**
-   * Render ipygraph into this widget's node.
+   * Render data when new widget is created.
    */
   async renderModel(model: IRenderMime.IMimeModel): Promise<void> {
-    // Launch a kernel
     const mimeType = this._mimeRendererOptions.mimeType;
     const data = model.data[mimeType] as string;
-    const magicString = '___NODES = """';
-    const splitPoint = data.indexOf(magicString);
-
-    const code = data.substring(0, splitPoint);
-    this._graphAPI.setupGlobals(code);
-
-    const endPoint = data.lastIndexOf('"""');
-    const graphData = data.substring(splitPoint + magicString.length, endPoint);
-    this._graphAPI.graphData = JSON.parse(graphData);
+    this.load(data);
   }
+
+  /**
+   * Render data when loaded from disk.
+   */
+  protected loadData(): void {
+    const data = this._context.model.toString();
+    this.load(data);
+  }
+
 }
 
 function populateGraphToolbar(

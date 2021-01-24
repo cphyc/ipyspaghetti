@@ -61,6 +61,7 @@ export class GraphAPI {
   private _sessionContext: SessionContext;
 
   private _globalCodeCell: FunctionEditor;
+  private _nodeCodeCell: FunctionEditor;
   private _registryOutput: OutputAreaInteractRegistry;
   private _graphData: object;
   private _typeInheritance: { [from: string]: string };
@@ -78,21 +79,27 @@ export class GraphAPI {
     this._graphWidget = graphWidget;
     this._funContainer = funContainer;
     this._nodeContainer = nodeContainer;
-    const model = new CodeCellModel({});
-    this._globalCodeCell = new FunctionEditor(
-      {
-        inputs: {},
-        outputs: {},
-        name: GLOBAL_NAMESPACE_FUNCTION_NAME,
-        source: ''
-      },
-      {
-        model,
-        rendermime: this._rendermime
-      }
-    );
+    const functionEditorFactory = (): FunctionEditor => {
+      const model = new CodeCellModel({});
+      return new FunctionEditor(
+        {
+          inputs: {},
+          outputs: {},
+          name: GLOBAL_NAMESPACE_FUNCTION_NAME,
+          source: ''
+        },
+        {
+          model,
+          rendermime: this._rendermime
+        }
+      );
+    };
+    this._globalCodeCell = functionEditorFactory();
     this._funContainer.addWidget(this._globalCodeCell);
     this._globalCodeCell.show();
+
+    // To evaluate the nodes
+    this._nodeCodeCell = functionEditorFactory();
 
     this._registryOutput = new OutputAreaInteractRegistry({
       model: new OutputAreaModel({}),
@@ -161,6 +168,25 @@ export class GraphAPI {
     return this._globalCodeCell.execute(this._sessionContext);
   }
 
+  setupNodeSource(source: string): void {
+    if (!this._nodeCodeCell) {
+      console.error('Missing global node cell');
+      return;
+    }
+    console.debug('Setting global node value');
+    this._nodeCodeCell.model.value.text = source;
+  }
+
+  /** Execute initial node source */
+  async executeNodeSource(): Promise<void | IExecuteReplyMsg> {
+    if (!this._nodeCodeCell) {
+      console.error('Missing global node cell');
+      return;
+    }
+    console.debug('Executing global code value');
+    return this._nodeCodeCell.execute(this._sessionContext);
+  }
+
   set graphData(graphData: object) {
     this._graphData = graphData;
   }
@@ -180,23 +206,25 @@ export class GraphAPI {
   }
 
   dataAsString(): string {
+    const globals = this._globalCodeCell.model.value.text;
+
+    const nodes = this._funContainer.widgets
+      .filter(w => {
+        const w2 = w as FunctionEditor;
+        return w2.schema.name !== GLOBAL_NAMESPACE_FUNCTION_NAME;
+      })
+      .map(w => {
+        const w2 = w as FunctionEditor;
+        return w2.model.value.text;
+      })
+      .join('\n');
+
     // TODO: this should be done automatically whenever the graph changes; leaving this for now.
     const graphData = this.updateGraphData();
-    let data = this._globalCodeCell.model.value.text;
+    const graph = JSON.stringify(graphData);
 
-    data +=
-      '\n' +
-      this._funContainer.widgets
-        .map(w => {
-          const w2 = w as FunctionEditor;
-          if (w2.schema.name === GLOBAL_NAMESPACE_FUNCTION_NAME) {
-            return '';
-          }
-          return w2.model.value.text;
-        })
-        .join('\n');
+    const data = GraphAPI.buildData({ globals, nodes, graph });
 
-    data += `\n\n___NODES = """${JSON.stringify(graphData)}"""\n`;
     return data;
   }
 
@@ -355,6 +383,44 @@ export class GraphAPI {
 
   deselectNode(): void {
     this._nodeContainer.widgets.forEach(w => w.hide());
+  }
+}
+
+export namespace GraphAPI {
+  export const GLOBALS_MAGIC = '# % IPYS: Globals';
+  export const NODES_MAGIC = '# % IPYS: Nodes';
+  export const GRAPH_MAGIC = '# % IPYS: Graph';
+  export const GRAPH_VARIABLE = '___GRAPH';
+
+  export interface GraphDataSchema {
+    globals: string;
+    nodes: string;
+    graph: string;
+  }
+
+  export function splitData(data: string): GraphDataSchema {
+    const globalsStart = data.indexOf(GLOBALS_MAGIC) + GLOBALS_MAGIC.length + 1;
+    const globalsEnd = data.indexOf(NODES_MAGIC);
+    const nodesStart = globalsEnd + NODES_MAGIC.length + 1;
+    const nodesEnd = data.indexOf(GRAPH_MAGIC);
+
+    const magic = `${GRAPH_VARIABLE} = """`;
+    const graphStart = data.indexOf(magic, nodesEnd) + magic.length;
+    const graphEnd = data.lastIndexOf('"""');
+    const graph = data.substring(graphStart, graphEnd);
+
+    return {
+      globals: data.substring(globalsStart, globalsEnd),
+      nodes: data.substring(nodesStart, nodesEnd),
+      graph: graph
+    };
+  }
+
+  export function buildData(data: GraphDataSchema): string {
+    const graph = `${GRAPH_VARIABLE} = """${data.graph}"""\n`;
+    return `${GraphAPI.GLOBALS_MAGIC}\n${data.globals}\n` +
+      `${GraphAPI.NODES_MAGIC}\n${data.nodes}\n` +
+      `${GraphAPI.GRAPH_MAGIC}\n${graph}\n`;
   }
 }
 
