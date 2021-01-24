@@ -27,7 +27,7 @@ This projects aims to address these issues by providing a slightly more constrai
 
 ![Example image](example/demo.png)
 
-The project is based on the idea of data flows, represented as nodes in a graph. The graph describes how to load, modify and output data, where data is an abstraction that comprise files on disk, resources on the Internet, the result of a plot, etc. The underlying file format is a _valid Python file_ that contains a global variable named `___NODES`. This variable is a string containing a JSON-formatted description of the graph. It can either be loaded in the development environment, or eventually be parsed entirely in Python and executed in headless environments (this *hasn't been coded yet*).
+The project is based on the idea of data flows, represented as nodes in a graph. The graph describes how to load, modify and output data, where data is an abstraction that comprise files on disk, resources on the Internet, the result of a plot, etc. The underlying file format is a _valid Python file_ that contains a global variable named `___GRAPH`. This variable is a string containing a JSON-formatted description of the graph. It can either be loaded in the development environment, or eventually be parsed entirely in Python and executed in headless environments (this *hasn't been coded yet*).
 
 The project aims to reuse as much as possible what's already been done for JupyterLab to allow a similar level of interactivity (including ipywidgets).
 
@@ -52,8 +52,8 @@ Of course, this approach has a few shortcomings. First, completion is not as fri
 - [x] Integrate in JupyterLab
 - [x] Support `ipyg` mimetype
 - [x] Edit the nodes' code in the browser _à la_ Jupyter Notebook
-- [x] (partially done) Rename to IPySphaghetti
-- [ ] Support multiple outputs
+- [x] Support multiple outputs
+- [ ] (partially done) Rename to IPySphaghetti
 - [ ] Nice packaging
 
 ## Requirements
