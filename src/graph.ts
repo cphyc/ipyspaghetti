@@ -1,4 +1,3 @@
-// import { graph, nodes, NodeSchema, connections, exec } from "./api";
 import {
   SerializedLGraphNode,
   LiteGraph,
@@ -9,7 +8,7 @@ import {
   INodeOutputSlot,
   INodeInputSlot,
   INodeSlot,
-  LLink,
+  LLink
 } from 'litegraph.js';
 
 import { IExecuteReplyMsg } from '@jupyterlab/services/lib/kernel/messages';
@@ -22,9 +21,11 @@ import { CodeCell } from '@jupyterlab/cells';
 
 import { IFunctionSchema, INodeSchema, INodeSchemaIO } from './graph_api';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
 // @ts-ignore
 import hash from 'object-hash';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
 // @ts-ignore
 import converter from 'hsl-to-rgb-for-reals';
 
@@ -54,7 +55,7 @@ enum NodeState {
   MISSING = 2,
   DIRTY = 4,
   RUNNING = 8,
-  ERROR = 16,
+  ERROR = 16
 }
 
 function configureSocket(id: string, optional: boolean): Partial<INodeSlot> {
@@ -65,7 +66,7 @@ function configureSocket(id: string, optional: boolean): Partial<INodeSlot> {
     // eslint-disable-next-line @typescript-eslint/camelcase
     color_on: LiteGraph.num2hex(converter(hue, 1, 0.7)),
     // eslint-disable-next-line @typescript-eslint/camelcase
-    color_off: LiteGraph.num2hex(converter(hue, 1, 0.65)),
+    color_off: LiteGraph.num2hex(converter(hue, 1, 0.65))
   };
   if (optional) {
     ret.shape = LiteGraph.BOX_SHAPE;
@@ -121,6 +122,7 @@ class PyLGraphNode extends LGraphNode {
 
   setProperty(key: string, value: any): void {
     // Missing declaration in d.ts file
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore
     super.setProperty(key, value);
   }
@@ -359,11 +361,14 @@ export class GraphHandler {
     this._graph = new LGraph();
 
     // Reduce font size for groups
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore
     const prevCtor = LGraphGroup.prototype._ctor;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore
-    LGraphGroup.prototype._ctor = function (title): void {
+    LGraphGroup.prototype._ctor = function(title): void {
       prevCtor.bind(this)(title);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
       // @ts-ignore
       // eslint-disable-next-line @typescript-eslint/camelcase
       this.font_size = 14;
@@ -372,7 +377,7 @@ export class GraphHandler {
     // Add custom events
     const graph = this._graph;
     for (const nodeClass of Object.values(LiteGraph.Nodes)) {
-      nodeClass.prototype.onKeyUp = function (e: KeyboardEvent): void {
+      nodeClass.prototype.onKeyUp = function(e: KeyboardEvent): void {
         if (e.key === 'Delete') {
           graph.remove(this);
         }
@@ -445,7 +450,7 @@ export class GraphHandler {
   }
 
   load(name?: string): void {
-    const loadNow = function (): void {
+    const loadNow = function(): void {
       // TODO
       // graph.index().then(reply => {
       //     this.graph.configure(reply.data);

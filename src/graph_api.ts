@@ -393,13 +393,13 @@ export namespace GraphAPI {
   export const GRAPH_MAGIC = '# % IPYS: Graph';
   export const GRAPH_VARIABLE = '___GRAPH';
 
-  export interface GraphDataSchema {
+  export interface IGraphDataSchema {
     globals: string;
     nodes: string;
     graph: string;
   }
 
-  export function splitData(data: string): GraphDataSchema {
+  export function splitData(data: string): IGraphDataSchema {
     const globalsStart = data.indexOf(GLOBALS_MAGIC) + GLOBALS_MAGIC.length + 1;
     const globalsEnd = data.indexOf(NODES_MAGIC);
     const nodesStart = globalsEnd + NODES_MAGIC.length + 1;
@@ -417,7 +417,7 @@ export namespace GraphAPI {
     };
   }
 
-  export function buildData(data: GraphDataSchema): string {
+  export function buildData(data: IGraphDataSchema): string {
     const graph = `${GRAPH_VARIABLE} = """${data.graph}"""`;
     return (
       `${GraphAPI.GLOBALS_MAGIC}\n${data.globals.trim()}\n\n\n` +

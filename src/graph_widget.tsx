@@ -13,7 +13,6 @@ interface IGraphComponentProps {
   graphAPI: GraphAPI;
 }
 
-
 let currentId = 0;
 class GraphComponent extends React.Component<IGraphComponentProps> {
   constructor(props: IGraphComponentProps) {
@@ -36,8 +35,8 @@ class GraphComponent extends React.Component<IGraphComponentProps> {
       <canvas
         width={this.props.width}
         height={this.props.height}
-        id={this.props.graphId}>
-      </canvas>
+        id={this.props.graphId}
+      ></canvas>
     );
   }
 }
@@ -59,7 +58,6 @@ export class GraphEditor extends ReactWidget {
     this._graphAPI = graphApi;
   }
 
-
   render(): JSX.Element {
     return (
       <GraphComponent
@@ -75,7 +73,7 @@ export class GraphEditor extends ReactWidget {
 
   setGraph = (gh: GraphHandler): void => {
     this._graphHandler = gh;
-  }
+  };
 
   get graphHandler(): GraphHandler {
     return this._graphHandler;

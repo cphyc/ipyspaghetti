@@ -22,7 +22,6 @@ import { CodeMirrorMimeTypeService } from '@jupyterlab/codemirror';
 
 import { CodeCell } from '@jupyterlab/cells';
 
-
 /** Inputs/outputs of functions */
 export interface IFunctionSchemaIO {
   type: string;
@@ -60,7 +59,7 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
   constructor(
     api: IMyPublicAPI,
     options?: GraphEditionPanel.IOptions,
-    mimeRendererOptions?: IRenderMime.IRendererOptions,
+    mimeRendererOptions?: IRenderMime.IRendererOptions
   ) {
     const { context, ...otherOptions } = options;
     const content = new SplitPanel(otherOptions);
@@ -202,7 +201,6 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
     const data = this._context.model.toString();
     this.load(data);
   }
-
 }
 
 function populateGraphToolbar(

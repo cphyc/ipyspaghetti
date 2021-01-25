@@ -26,6 +26,7 @@ export async function execute(
   }
   const content: KernelMessage.IExecuteRequestMsg['content'] = {
     code,
+    // eslint-disable-next-line @typescript-eslint/camelcase
     stop_on_error: stopOnError
   };
 
