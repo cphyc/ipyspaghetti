@@ -38,7 +38,7 @@ _(sys.executable, "-m", "pip", "check")
 # list the extensions
 _("jupyter", "server", "extension", "list")
 
-# remove Lab-3 incomptible extension
+# remove Lab-3 incompatible extension
 subprocess.call(["jupyter", "labextension", "uninstall", "--no-build", "jupyter-offlinenotebook"])
 
 # initially list installed extensions to determine if there are any surprises
