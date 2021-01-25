@@ -20,4 +20,5 @@ dependencies:
   - pip
   - wheel
   # additional packages for demos
-  # - ipywidgets
+  - ipywidgets
+  - yt
