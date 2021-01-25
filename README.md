@@ -1,6 +1,6 @@
 # IpySpaghetti — WORK IN PROGRESS
 
-![Github Actions Status](https://github.com/cphyc/node_editor/workflows/Build/badge.svg)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/cphyc/node_editor/main?urlpath=lab)
+![Github Actions Status](https://github.com/cphyc/node_editor/workflows/Build/badge.svg)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/cphyc/node_editor/main?urlpath=lab/tree/example/demo.ipyg)
 
 A JupyterLab extension.
 
