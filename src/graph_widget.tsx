@@ -14,6 +14,8 @@ interface IGraphComponentProps {
 }
 
 let currentId = 0;
+// TODO: for some reason, eslint doesn't notice GraphComponent *is* used.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class GraphComponent extends React.Component<IGraphComponentProps> {
   constructor(props: IGraphComponentProps) {
     super(props);
