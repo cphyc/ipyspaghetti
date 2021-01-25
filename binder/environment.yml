@@ -21,4 +21,12 @@ dependencies:
   - wheel
   # additional packages for demos
   - ipywidgets
-  - yt
+  - cython
+  - git
+  - sympy
+  - ipython
+  - matplotlib
+  - netCDF4
+  - pooch  # to load datasets from the yt repository
+  - pip:
+    - git+https://github.com/yt-project/yt.git@main#egg=yt
