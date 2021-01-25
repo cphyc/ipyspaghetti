@@ -28,4 +28,4 @@ dependencies:
   - matplotlib
   - netCDF4
   - pip:
-    - git+https://github.com/yt-project/yt\#egg=main
+    - git+https://github.com/yt-project/yt.git@main#egg=yt
