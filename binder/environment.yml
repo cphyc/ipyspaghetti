@@ -25,7 +25,7 @@ dependencies:
   - git
   - sympy
   - ipython
-  - matplotlib
+  - matplotlib-base
   - netCDF4
   - pooch  # to load datasets from the yt repository
   - pip:
