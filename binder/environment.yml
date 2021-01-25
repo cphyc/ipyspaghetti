@@ -21,4 +21,11 @@ dependencies:
   - wheel
   # additional packages for demos
   - ipywidgets
-  - yt
+  - cython
+  - git
+  - sympy
+  - ipython
+  - matplotlib
+  - netCDF4
+  - pip:
+    - git+https://github.com/yt-project/yt\#egg=main
