@@ -11,9 +11,9 @@ from node_editor.graph import register_node, registry
 # % IPYS: Nodes
 @register_node
 def load_dataset(
-    path: str = "/home/ccc/Documents/prog/yt-data/output_00080/info_00080.txt",
+    path: str = "output_00080",
 ) -> Dataset:
-    ds = yt.load(path)
+    ds = yt.load_sample(path)
     ds.index
     return ds
 
