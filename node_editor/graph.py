@@ -7,7 +7,6 @@ from IPython.display import display, JSON
 import json
 
 import typing_utils
-from traitlets.traitlets import Bool
 
 
 class Node(dict):
@@ -78,7 +77,7 @@ class NodeRegistry:
     @staticmethod
     def _resolve_parent(
         t1_str: str, t2_str: str, types: Dict[str, type], parent_types: Dict[str, str]
-    ) -> Bool:
+    ) -> bool:
         t1 = types[t1_str]
         t2 = types[t2_str]
         # Check whether t1 is a subtype of t2
