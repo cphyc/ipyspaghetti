@@ -1,12 +1,11 @@
 import inspect
+import json
 from inspect import _empty, getsource, signature
 from types import FunctionType
 from typing import Callable, Dict
-from IPython.display import display, JSON
-
-import json
 
 import typing_utils
+from IPython.display import JSON, display
 
 
 class Node(dict):
