@@ -336,8 +336,8 @@ export class GraphHandler {
   private known_types: { [id: string]: string | null } = {
     'typing.Any': null,
     "<class 'str'>": 'string',
-    "<class 'int'>": 'int',
-    "<class 'float'>": 'float',
+    "<class 'int'>": 'number',
+    "<class 'float'>": 'number',
     "<class 'bool'>": 'boolean'
   };
 
