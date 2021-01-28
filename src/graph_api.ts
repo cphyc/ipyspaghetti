@@ -220,7 +220,7 @@ export class GraphAPI {
         const w2 = w as FunctionEditor;
         return w2.model.value.text;
       })
-      .join('\n');
+      .join('\n\n');
 
     // TODO: this should be done automatically whenever the graph changes; leaving this for now.
     const graphData = this.updateGraphData();
