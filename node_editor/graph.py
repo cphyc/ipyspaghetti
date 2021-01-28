@@ -2,7 +2,7 @@ import inspect
 import json
 from inspect import _empty, getsource, signature
 from types import FunctionType
-from typing import Callable, Dict
+from typing import Callable, Dict, Union
 
 import typing_utils
 from IPython.display import JSON, display
@@ -12,12 +12,13 @@ class Node(dict):
     function: FunctionType
     type_map: Dict[str, type]
 
-    def __init__(self, inputs, outputs, fun, type_map):
+    def __init__(self, inputs, outputs, fun, type_map, namespace):
         super(Node, self).__init__(
             inputs=inputs,
             outputs=outputs,
             name=fun.__name__,
             source=getsource(fun),
+            namespace=namespace
         )
         self.function = fun
         self.type_map = type_map
@@ -39,7 +40,7 @@ class NodeRegistry:
     def __init__(self):
         self.nodes = {}
 
-    def register(self, fun: Callable):
+    def register_function(self, fun: Callable, namespace: str = 'nodes'):
         # Extract signature
         sig = signature(fun)
 
@@ -64,8 +65,18 @@ class NodeRegistry:
         else:
             outputs = {}
 
-        self.nodes[fun.__name__] = Node(inputs, outputs, fun, type_map)
+        self.nodes[fun.__name__] = Node(inputs, outputs, fun, type_map, namespace)
         return fun
+
+    def register(self, function_or_namespace: Union[FunctionType, str]):
+        if isinstance(function_or_namespace, str):
+            namespace: str = function_or_namespace
+            def decorator(fun: FunctionType):
+                return self.register_function(fun, namespace=namespace)
+            return decorator
+        else:
+            fun: FunctionType = function_or_namespace
+            return self.register_function(fun)
 
     def get_nodes(self) -> Dict[str, Node]:
         return self.nodes
@@ -107,8 +118,9 @@ class NodeRegistry:
     def get_parent_types_as_json(self) -> str:
         return json.dumps(self.get_parent_types())
 
+
 registry = NodeRegistry()
 
 
-def register_node(fun: FunctionType):
+def register_node(fun: Union[FunctionType, str]) -> FunctionType:
     return registry.register(fun)

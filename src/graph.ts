@@ -302,16 +302,17 @@ class PyLGraphNode extends LGraphNode {
 }
 
 export function nodeFactory(gh: GraphHandler, node: IFunctionSchema): void {
+  const type = `${node.namespace}/${node.name}`;
   class NewNode extends PyLGraphNode {
     constructor(title?: string) {
       super(title, node, gh);
     }
     static graphHandler = gh;
-    static type = `mynodes/${node.name}`;
+    static type = type;
     static title = node.name;
   }
 
-  LiteGraph.registerNodeType(`mynodes/${node.name}`, NewNode);
+  LiteGraph.registerNodeType(type, NewNode);
 }
 
 export class GraphHandler {

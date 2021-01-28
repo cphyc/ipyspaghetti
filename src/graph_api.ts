@@ -30,6 +30,7 @@ export interface IFunctionSchema {
   outputs: { [id: string]: IFunctionSchemaIO };
   name: string;
   source: string;
+  namespace: string;
 }
 
 /** Schema of a graph node cell */
@@ -87,7 +88,8 @@ export class GraphAPI {
           inputs: {},
           outputs: {},
           name: GLOBAL_NAMESPACE_FUNCTION_NAME,
-          source: ''
+          source: '',
+          namespace: ''
         },
         {
           model,
