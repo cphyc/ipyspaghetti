@@ -292,6 +292,12 @@ class PyLGraphNode extends LGraphNode {
     };
   }
 
+  onKeyUp(e: KeyboardEvent): void {
+    if (e.key === 'Delete') {
+      this.graph.remove(this);
+    }
+  };
+
   get nodeSchema(): INodeSchema {
     return this.buildNodeSchema(1);
   }
