@@ -77,7 +77,7 @@ function activate(
   console.log('JupyterLab extension node_editor is activated!');
 
   const factory = new IPygViewerFactory({
-    name: 'IPygraph madafuka',
+    name: 'IPygraph viewer',
     fileTypes: ['ipygraph', 'text'],
     defaultFor: ['ipygraph'],
     readOnly: false,
