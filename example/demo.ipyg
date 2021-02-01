@@ -17,9 +17,11 @@ def load_dataset(
     ds.index
     return ds
 
+
 @register_node
 def pair_to_tuple(a: Any, b: Any) -> Tuple[Any, Any]:
     return (a, b)
+
 
 @register_node
 def projection_plot(
@@ -31,69 +33,15 @@ def projection_plot(
 
 # % IPYS: Graph
 ___GRAPH = """{
-  "last_node_id": 3,
-  "last_link_id": 1,
+  "last_node_id": 5,
+  "last_link_id": 2,
   "nodes": [
     {
-      "id": 2,
-      "type": "mynodes/load_dataset",
+      "id": 5,
+      "type": "nodes/projection_plot",
       "pos": {
-        "0": 296,
-        "1": 135,
-        "2": 0,
-        "3": 0,
-        "4": 0,
-        "5": 0,
-        "6": 0,
-        "7": 0,
-        "8": 0,
-        "9": 0
-      },
-      "size": {
-        "0": 140,
-        "1": 26
-      },
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "path",
-          "type": "string",
-          "link": null,
-          "color_on": "#EBFF66",
-          "color_off": "#E7FF4D",
-          "shape": 1
-        }
-      ],
-      "outputs": [
-        {
-          "name": "output",
-          "type": "<class 'yt.data_objects.static_output.Dataset'>",
-          "links": [
-            1
-          ],
-          "color_on": "#66F2FF",
-          "color_off": "#4DF0FF",
-          "shape": 4
-        }
-      ],
-      "properties": {
-        "state": 1,
-        "count": 0,
-        "previous_input": [
-          null
-        ],
-        "type": 1
-      },
-      "boxcolor": "green"
-    },
-    {
-      "id": 3,
-      "type": "mynodes/projection_plot",
-      "pos": {
-        "0": 493,
-        "1": 133,
+        "0": 458,
+        "1": 86,
         "2": 0,
         "3": 0,
         "4": 0,
@@ -114,7 +62,7 @@ ___GRAPH = """{
         {
           "name": "ds",
           "type": "<class 'yt.data_objects.static_output.Dataset'>",
-          "link": 1,
+          "link": 2,
           "color_on": "#66F2FF",
           "color_off": "#4DF0FF",
           "shape": 4
@@ -147,24 +95,72 @@ ___GRAPH = """{
         }
       ],
       "properties": {
-        "state": 1,
+        "state": 4,
         "count": 0,
-        "previous_input": [
-          1,
-          null,
-          null
-        ],
+        "previous_input": [],
         "type": 1
       },
-      "boxcolor": "green"
+      "boxcolor": "purple"
+    },
+    {
+      "id": 4,
+      "type": "nodes/load_dataset",
+      "pos": {
+        "0": 208,
+        "1": 102,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0
+      },
+      "size": {
+        "0": 140,
+        "1": 26
+      },
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "path",
+          "type": "string",
+          "link": null,
+          "color_on": "#EBFF66",
+          "color_off": "#E7FF4D",
+          "shape": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "<class 'yt.data_objects.static_output.Dataset'>",
+          "links": [
+            2
+          ],
+          "color_on": "#66F2FF",
+          "color_off": "#4DF0FF",
+          "shape": 4
+        }
+      ],
+      "properties": {
+        "state": 4,
+        "count": 0,
+        "previous_input": [],
+        "type": 1
+      },
+      "boxcolor": "purple"
     }
   ],
   "links": [
     [
-      1,
       2,
+      4,
       0,
-      3,
+      5,
       0,
       "<class 'yt.data_objects.static_output.Dataset'>"
     ]
