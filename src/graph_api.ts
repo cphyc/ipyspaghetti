@@ -12,11 +12,15 @@ import { JSONObject } from '@lumino/coreutils';
 
 import { Panel } from '@lumino/widgets';
 
+import { Signal, ISignal } from '@lumino/signaling';
+
 import { GraphEditor } from './graph_widget';
 
 import { OutputAreaInteractRegistry } from './utils';
 
 import { nodeFactory } from './graph';
+
+import { IMyManager } from './manager';
 
 /** Inputs/outputs of functions */
 export interface IFunctionSchemaIO {
@@ -68,9 +72,27 @@ export class GraphAPI {
   private _graphData: object;
   private _typeInheritance: { [from: string]: string };
 
-  constructor(sessionContext: SessionContext, rendermime: IRenderMimeRegistry) {
+  private _currentNode: NodeViewer;
+  private _currentFunction: FunctionEditor;
+
+  private _currentNodeChanged = new Signal<this, NodeViewer>(this);
+  private _currentFunctionChanged = new Signal<this, FunctionEditor>(this);
+
+  constructor(
+    sessionContext: SessionContext,
+    rendermime: IRenderMimeRegistry,
+    manager: IMyManager
+  ) {
     this._sessionContext = sessionContext;
     this._rendermime = rendermime;
+    this._currentFunctionChanged.connect((_sender, fun) => {
+      manager.currentFunction = fun;
+      manager.currentContext = sessionContext;
+    });
+    this._currentNodeChanged.connect((_sender, node) => {
+      manager.currentNode = node;
+      manager.currentContext = sessionContext;
+    });
   }
 
   setWidgets(
@@ -108,6 +130,9 @@ export class GraphAPI {
       model: new OutputAreaModel({}),
       rendermime: this._rendermime
     });
+
+    // Set the current node and function
+    this.currentFunction = this._globalCodeCell;
   }
 
   /**--------------------------------------------------------
@@ -299,6 +324,7 @@ export class GraphAPI {
       const w2 = w as FunctionEditor;
       if (w2.schema.name === schema.name) {
         w.show();
+        this.currentFunction = w2;
       } else {
         w.hide();
       }
@@ -310,6 +336,7 @@ export class GraphAPI {
       const w2 = w as FunctionEditor;
       if (w2.schema.name === GLOBAL_NAMESPACE_FUNCTION_NAME) {
         w.show();
+        this.currentFunction = w2;
       } else {
         w.hide();
       }
@@ -377,6 +404,7 @@ export class GraphAPI {
       const w2 = w as NodeViewer;
       if (w2.schema.id === schema.id) {
         w.show();
+        this.currentNode = w2;
       } else {
         w.hide();
       }
@@ -386,7 +414,36 @@ export class GraphAPI {
 
   deselectNode(): void {
     this._nodeContainer.widgets.forEach(w => w.hide());
+    this.currentNode = null;
   }
+
+  // Signal for function/cell setting
+  set currentFunction(fun: FunctionEditor) {
+    this._currentFunction = fun;
+    this._currentFunctionChanged.emit(fun);
+  }
+
+  get currentFunction(): FunctionEditor {
+    return this._currentFunction;
+  }
+
+  get currentFunctionChanged(): ISignal<this, FunctionEditor> {
+    return this._currentFunctionChanged;
+  }
+
+  set currentNode(node: NodeViewer) {
+    this._currentNode = node;
+    this._currentNodeChanged.emit(node);
+  }
+
+  get currentNode(): NodeViewer {
+    return this._currentNode;
+  }
+
+  get currentNodeChanged(): ISignal<this, NodeViewer> {
+    return this._currentNodeChanged;
+  }
+
 }
 
 export namespace GraphAPI {
@@ -454,7 +511,7 @@ abstract class GenericCodeCell<T> extends CodeCell {
 }
 
 /** Edit a function */
-class FunctionEditor extends GenericCodeCell<IFunctionSchema> {
+export class FunctionEditor extends GenericCodeCell<IFunctionSchema> {
   constructor(schema: IFunctionSchema, options: CodeCell.IOptions) {
     super(schema, options);
     this.addClass(FUNCTION_EDITOR_CLASS);
@@ -462,7 +519,7 @@ class FunctionEditor extends GenericCodeCell<IFunctionSchema> {
 }
 
 /** Show a node */
-class NodeViewer extends GenericCodeCell<INodeSchema> {
+export class NodeViewer extends GenericCodeCell<INodeSchema> {
   constructor(schema: INodeSchema, options: CodeCell.IOptions) {
     super(schema, options);
     this.addClass(NODE_VIEWER_CLASS);
@@ -470,7 +527,7 @@ class NodeViewer extends GenericCodeCell<INodeSchema> {
   }
 }
 
-namespace NodeViewer {
+export namespace NodeViewer {
   export function createCode(schema: INodeSchema): string {
     const args = Object.entries(schema.inputs)
       .filter(([_paramName, input]) => {

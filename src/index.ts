@@ -31,6 +31,8 @@ import { IPygViewerFactory } from './widget';
  */
 namespace CommandIDs {
   export const create = 'kernel-output:create';
+  export const executeCurrentNode = 'spaghetti:node-execute';
+  export const executeCurrentFunction = 'spaghetti:function-execute';
 }
 
 /**
@@ -61,7 +63,7 @@ const extension: JupyterFrontEndPlugin<IMyManager> = {
  * @param rendermime Jupyter Render Mime Registry
  * @param translator Jupyter Translator
  * @param restorer Jupyter Restorer
- * @param restorer Jupyter Completion Manager
+ * @param completionManager Jupyter Completion Manager
  * @param launcher [optional] Jupyter Launcher
  */
 function activate(
@@ -108,6 +110,36 @@ function activate(
     label: trans.__('Open the Node Editor Panel'),
     caption: trans.__('Open the Node Editor Panel'),
     execute: createGraph
+  });
+
+  commands.addCommand(CommandIDs.executeCurrentNode, {
+    label: trans.__('Execute current node'),
+    caption: trans.__('Execute current node'),
+    execute: () => {
+      console.log('Executing current node');
+      return mgr.currentNode?.execute(mgr.currentContext);
+    }
+  });
+
+  commands.addCommand(CommandIDs.executeCurrentFunction, {
+    label: trans.__('Execute current function'),
+    caption: trans.__('Execute current function'),
+    execute: () => {
+      console.log('Executing current function');
+      return mgr.currentFunction?.execute(mgr.currentContext);
+    }
+  });
+
+  commands.addKeyBinding({
+    command: CommandIDs.executeCurrentNode,
+    keys: ['Shift Enter'],
+    selector: '.jp-node-viewer .jp-InputArea-editor'
+  });
+
+  commands.addKeyBinding({
+    command: CommandIDs.executeCurrentFunction,
+    keys: ['Shift Enter'],
+    selector: '.jp-function-editor .jp-InputArea-editor'
   });
 
   // add items in command palette and menu

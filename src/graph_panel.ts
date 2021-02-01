@@ -79,7 +79,7 @@ export class GraphEditionPanel extends MainAreaWidget<SplitPanel>
 
     // Initialize the API
     const { rendermime } = api.manager;
-    const graphAPI = new GraphAPI(sessionContext, rendermime);
+    const graphAPI = new GraphAPI(sessionContext, rendermime, api.manager);
 
     const graphEditor = new GraphEditor(graphAPI);
     const functionEditorBox = new BoxPanel({});
