@@ -293,10 +293,60 @@ class PyLGraphNode extends LGraphNode {
   }
 
   onKeyUp(e: KeyboardEvent): void {
-    if (e.key === 'Delete') {
-      this.graph.remove(this);
+    switch (e.key) {
+      case 'Delete':
+        this.graph.remove(this);
+        break;
+      case 'ArrowRight':
+        this.moveRight();
+        break;
+      case 'ArrowLeft':
+        this.moveLeft();
+        break;
+      case 'ArrowUp':
+        this.moveUp();
+        break;
+      case 'ArrowDown':
+        this.moveDown();
+        break;
+      case 'Enter':
+        if (e.shiftKey) {
+          // Spawn new child node
+        }
     }
   };
+
+  moveRight(): void {
+    console.debug('Moving right');
+    const allLinks = this.outputs.filter(out => out.links.length > 0);
+    if (!allLinks) return;
+    const ilink = allLinks[0].links[0];
+    const link = this.graph.links[ilink];
+    const node = this.graph.getNodeById(link.target_id);
+    this.graphHandler.canvas.selectNode(node);
+  }
+
+  moveLeft(): void {
+    console.debug('Moving left');
+    const allLinks = this.inputs.filter(inp => inp.link);
+    if (!allLinks) return;
+    const ilink = allLinks[0].link;
+    const link = this.graph.links[ilink];
+    const node = this.graph.getNodeById(link.origin_id);
+    this.graphHandler.canvas.selectNode(node);
+  }
+
+  moveUp(): void {
+    console.log('Moving up');
+  }
+  moveDown(): void {
+    console.log('Moving down');
+  }
+
+  _select(otherNode: LGraphNode): void {
+    this.graphHandler.graphAPI.selectNode(this.nodeSchema);
+    console.log(otherNode);
+  }
 
   get nodeSchema(): INodeSchema {
     return this.buildNodeSchema(1);
@@ -324,7 +374,7 @@ export function nodeFactory(gh: GraphHandler, node: IFunctionSchema): void {
 export class GraphHandler {
   private _graph: LGraph;
 
-  private canvas: LGraphCanvas;
+  private _canvas: LGraphCanvas;
 
   private socketConfiguration: { [id: string]: Partial<INodeSlot> };
 
@@ -393,14 +443,14 @@ export class GraphHandler {
   }
 
   setupCanvas(containerId: string): void {
-    this.canvas = new LGraphCanvas(containerId, this._graph);
+    this._canvas = new LGraphCanvas(containerId, this._graph);
     const font = getComputedStyle(document.documentElement).getPropertyValue(
       '--jp-ui-font-family'
     );
     // eslint-disable-next-line @typescript-eslint/camelcase
-    this.canvas.title_text_font = font;
+    this._canvas.title_text_font = font;
     // eslint-disable-next-line @typescript-eslint/camelcase
-    this.canvas.inner_text_font = font;
+    this._canvas.inner_text_font = font;
   }
 
   createFunction(schema: IFunctionSchema): void {
@@ -482,6 +532,10 @@ export class GraphHandler {
 
   get graph(): LGraph {
     return this._graph;
+  }
+
+  get canvas(): LGraphCanvas {
+    return this._canvas;
   }
 
   get widget(): Panel {

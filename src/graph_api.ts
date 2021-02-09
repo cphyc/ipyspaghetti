@@ -409,7 +409,6 @@ export class GraphAPI {
         w.hide();
       }
     });
-    // TODO: inform the graph we've selected a cell
   }
 
   deselectNode(): void {
