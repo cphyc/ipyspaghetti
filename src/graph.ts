@@ -318,8 +318,8 @@ class PyLGraphNode extends LGraphNode {
 
   moveRight(): void {
     console.debug('Moving right');
-    const allLinks = this.outputs.filter(out => out.links.length > 0);
-    if (!allLinks) return;
+    const allLinks = this.outputs.filter(out => out.links?.length > 0);
+    if (!allLinks.length) return;
     const ilink = allLinks[0].links[0];
     const link = this.graph.links[ilink];
     const node = this.graph.getNodeById(link.target_id);
@@ -329,7 +329,7 @@ class PyLGraphNode extends LGraphNode {
   moveLeft(): void {
     console.debug('Moving left');
     const allLinks = this.inputs.filter(inp => inp.link);
-    if (!allLinks) return;
+    if (!allLinks.length) return;
     const ilink = allLinks[0].link;
     const link = this.graph.links[ilink];
     const node = this.graph.getNodeById(link.origin_id);
@@ -341,11 +341,6 @@ class PyLGraphNode extends LGraphNode {
   }
   moveDown(): void {
     console.log('Moving down');
-  }
-
-  _select(otherNode: LGraphNode): void {
-    this.graphHandler.graphAPI.selectNode(this.nodeSchema);
-    console.log(otherNode);
   }
 
   get nodeSchema(): INodeSchema {
