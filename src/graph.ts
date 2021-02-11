@@ -81,6 +81,7 @@ class PyLGraphNode extends LGraphNode {
 
   static type: string;
   static title: string;
+  namespace: string;
   private schema: IFunctionSchema;
 
   private graphHandler: GraphHandler;
@@ -88,13 +89,15 @@ class PyLGraphNode extends LGraphNode {
   constructor(
     title: string,
     node: IFunctionSchema,
-    graphHandler: GraphHandler
+    graphHandler: GraphHandler,
+    namespace: string
   ) {
     super(title);
 
     this.schema = node;
     this.graphHandler = graphHandler;
     this.title = this.schema.name;
+    this.namespace = namespace;
 
     for (const [name, infos] of Object.entries(this.schema.inputs)) {
       const ntype = this.graphHandler.normalizeType(infos.type);
@@ -312,6 +315,7 @@ class PyLGraphNode extends LGraphNode {
       case 'Enter':
         if (e.shiftKey) {
           // Spawn new child node
+          this.graphHandler.spawnNode(this);
         }
     }
   };
@@ -352,11 +356,19 @@ class PyLGraphNode extends LGraphNode {
   }
 }
 
-export function nodeFactory(gh: GraphHandler, node: IFunctionSchema): void {
+interface INodeCtor {
+  new (title?: string): PyLGraphNode;
+}
+
+export function nodeFactory(
+  gh: GraphHandler,
+  node: IFunctionSchema
+): INodeCtor {
   const type = `${node.namespace}/${node.name}`;
   class NewNode extends PyLGraphNode {
+    namespace: string;
     constructor(title?: string) {
-      super(title, node, gh);
+      super(title, node, gh, node.namespace);
     }
     static graphHandler = gh;
     static type = type;
@@ -364,6 +376,7 @@ export function nodeFactory(gh: GraphHandler, node: IFunctionSchema): void {
   }
 
   LiteGraph.registerNodeType(type, NewNode);
+  return NewNode;
 }
 
 export class GraphHandler {
@@ -439,6 +452,7 @@ export class GraphHandler {
 
   setupCanvas(containerId: string): void {
     this._canvas = new LGraphCanvas(containerId, this._graph);
+    this._canvas.links_render_mode = LiteGraph.LINEAR_LINK;
     const font = getComputedStyle(document.documentElement).getPropertyValue(
       '--jp-ui-font-family'
     );
@@ -523,6 +537,44 @@ export class GraphHandler {
   loadGraph(data: string): void {
     const conf = JSON.parse(data);
     this._graph.configure(conf);
+  }
+
+  spawnNode(node: PyLGraphNode): void {
+    const inpType = node.outputs[0].type as string;
+    const schema: IFunctionSchema = {
+      inputs: {
+        input1: {
+          type: inpType,
+          optional: false
+        }
+      },
+      outputs: {},
+      name: 'new node',
+      source: `@register_node\ndef new_node(input1: ${node.outputs[0].type}) -> None:\npass`,
+      namespace: node.namespace
+    };
+
+    const NodeClass = nodeFactory(this, schema);
+
+    NodeClass.prototype.onConnectInput = function(
+      inputIndex: number,
+      outputType: string | -1,
+      outputSlot: INodeOutputSlot,
+      outputNode: LGraphNode,
+      outputIndex: number
+    ): boolean {
+      // Count number of unconnected input sockets
+      this.addInput('prout', null);
+      this.schema.inputs['prout'] = {
+        type: 'typing.Any',
+        optional: true
+      }
+      return true;
+    };
+
+    const newNode = new NodeClass('new_node');
+    this._graph.add(newNode);
+    node.connect(0, newNode, 0);
   }
 
   get graph(): LGraph {
