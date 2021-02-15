@@ -1,10 +1,10 @@
-# a mybinder.org-ready environment for demoing node_editor
+# a mybinder.org-ready environment for demoing ipyspaghetti
 # this environment may also be used locally on Linux/MacOS/Windows, e.g.
 #
 #   conda env update --file binder/environment.yml
-#   conda activate node_editor-demo
+#   conda activate ipyspaghetti-demo
 #
-name: node_editor-demo
+name: ipyspaghetti-demo
 
 channels:
   - conda-forge

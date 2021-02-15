@@ -1,5 +1,5 @@
 """
-node_editor setup
+ipyspaghetti setup
 """
 import json
 import os
@@ -13,7 +13,7 @@ import setuptools
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 # The name of the project
-name = "node_editor"
+name = "ipyspaghetti"
 
 # Get our version
 with open(os.path.join(HERE, 'package.json')) as f:
@@ -32,13 +32,13 @@ package_data_spec = {
     ]
 }
 
-labext_name = "node_editor"
+labext_name = "ipyspaghetti"
 
 data_files_spec = [
     ("share/jupyter/labextensions/%s" % labext_name, lab_path, "**"),
     ("share/jupyter/labextensions/%s" % labext_name, HERE, "install.json"),
     ("etc/jupyter/jupyter_server_config.d",
-     "jupyter-config", "node_editor.json"),
+     "jupyter-config", "ipyspaghetti.json"),
      
 ]
 
@@ -65,7 +65,7 @@ with open("README.md", "r") as fh:
 setup_args = dict(
     name=name,
     version=version,
-    url="https://github.com/cphyc/node_editor",
+    url="https://github.com/cphyc/ipyspaghetti",
     author="Corentin Cadiou",
     description="Interactive node editor for python",
     long_description= long_description,

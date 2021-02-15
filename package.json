@@ -1,5 +1,5 @@
 {
-  "name": "node_editor",
+  "name": "ipyspaghetti",
   "version": "0.1.0",
   "description": "Interactive node editor for python",
   "keywords": [
@@ -7,9 +7,9 @@
     "jupyterlab",
     "jupyterlab-extension"
   ],
-  "homepage": "https://github.com/cphyc/node_editor",
+  "homepage": "https://github.com/cphyc/ipyspaghetti",
   "bugs": {
-    "url": "https://github.com/cphyc/node_editor/issues"
+    "url": "https://github.com/cphyc/ipyspaghetti/issues"
   },
   "license": "BSD-3-Clause",
   "author": "Corentin Cadiou",
@@ -22,7 +22,7 @@
   "style": "style/index.css",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cphyc/node_editor.git"
+    "url": "https://github.com/cphyc/ipyspaghetti.git"
   },
   "scripts": {
     "build": "jlpm run build:lib && jlpm run build:labextension:dev",
@@ -32,7 +32,7 @@
     "build:lib": "tsc",
     "clean": "jlpm run clean:lib",
     "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
-    "clean:labextension": "rimraf node_editor/labextension",
+    "clean:labextension": "rimraf ipyspaghetti/labextension",
     "clean:all": "jlpm run clean:lib && jlpm run clean:labextension",
     "eslint": "eslint . --ext .ts,.tsx --fix",
     "eslint:check": "eslint . --ext .ts,.tsx",
@@ -88,12 +88,12 @@
           "pip"
         ],
         "base": {
-          "name": "node_editor"
+          "name": "ipyspaghetti"
         }
       }
     },
     "extension": "lib/index.js",
     "mimeExtension": "lib/mime.js",
-    "outputDir": "node_editor/labextension"
+    "outputDir": "ipyspaghetti/labextension"
   }
 }

@@ -36,10 +36,10 @@ namespace CommandIDs {
 }
 
 /**
- * Initialization data for the node_editor extension.
+ * Initialization data for the ipyspaghetti extension.
  */
 const extension: JupyterFrontEndPlugin<IMyManager> = {
-  id: 'node_editor:plugin',
+  id: 'ipyspaghetti:plugin',
   autoStart: true,
   provides: IMyManager,
   optional: [ILauncher],
@@ -76,7 +76,7 @@ function activate(
   completionManager: ICompletionManager,
   launcher: ILauncher | null
 ): IMyManager {
-  console.log('JupyterLab extension node_editor is activated!');
+  console.log('JupyterLab extension ipyspaghetti is activated!');
 
   const factory = new IPygViewerFactory({
     name: 'IPygraph viewer',
@@ -157,12 +157,12 @@ function activate(
   }
 
   const tracker = new WidgetTracker<GraphEditionPanel>({
-    namespace: 'node_editor'
+    namespace: 'ipyspaghetti'
   });
 
   restorer.restore(tracker, {
     command: CommandIDs.create,
-    name: () => 'node_editor'
+    name: () => 'ipyspaghetti'
   });
 
   return MyPublicAPI.manager;

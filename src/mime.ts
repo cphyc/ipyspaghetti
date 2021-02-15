@@ -39,7 +39,7 @@ export const rendererFactory: IRenderMime.IRendererFactory = {
  * Extension definition.
  */
 const extension: IRenderMime.IExtension = {
-  id: '@node_editor/mime:plugin',
+  id: '@ipyspaghetti/mime:plugin',
   rendererFactory,
   rank: 0,
   dataType: 'string',

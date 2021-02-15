@@ -141,7 +141,7 @@ export class GraphAPI {
   async loadFunctionList(): Promise<void> {
     // TODO: less ugly solution!
     await OutputArea.execute(
-      'from node_editor.graph import registry; print(registry.get_nodes_as_json())',
+      'from ipyspaghetti.graph import registry; print(registry.get_nodes_as_json())',
       this._registryOutput,
       this._sessionContext
     );
@@ -158,7 +158,7 @@ export class GraphAPI {
   async loadTypeInheritance(): Promise<void> {
     // TODO: less ugly solution!
     await OutputArea.execute(
-      'from node_editor.graph import registry; print(registry.get_parent_types_as_json())',
+      'from ipyspaghetti.graph import registry; print(registry.get_parent_types_as_json())',
       this._registryOutput,
       this._sessionContext
     );
