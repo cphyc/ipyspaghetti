@@ -5,7 +5,7 @@ import yt
 from yt.data_objects.static_output import Dataset
 from yt.visualization.plot_window import PlotWindow
 
-from node_editor.graph import register_node, registry
+from ipyspaghetti.graph import register_node, registry
 
 
 # % IPYS: Nodes

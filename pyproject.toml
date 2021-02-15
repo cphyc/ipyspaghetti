@@ -43,5 +43,5 @@ known_third_party = [
   "pyx",
   "glue",
 ]
-known_first_party = ["node_editor"]
+known_first_party = ["ipyspaghetti"]
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]

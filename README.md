@@ -1,11 +1,11 @@
 # IpySpaghetti — WORK IN PROGRESS
 
-![Github Actions Status](https://github.com/cphyc/node_editor/workflows/Build/badge.svg)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/cphyc/node_editor/main?urlpath=lab/tree/example/demo.ipyg)
+![Github Actions Status](https://github.com/cphyc/ipyspaghetti/workflows/Build/badge.svg)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/cphyc/ipyspaghetti/main?urlpath=lab/tree/example/demo.ipyg)
 
 A JupyterLab extension.
 
-This extension is composed of a Python package named `node_editor`
-for the server extension and a NPM package named `node_editor`
+This extension is composed of a Python package named `ipyspaghetti`
+for the server extension and a NPM package named `ipyspaghetti`
 for the frontend extension.
 
 It is subject to changes as this is still very much a work in progress. DO NOT RELY EXPECT IT TO WORK NOR RELY ON IT FOR IMPORTANT WORK.
@@ -63,7 +63,7 @@ Of course, this approach has a few shortcomings. First, completion is not as fri
 ## Install
 
 ```bash
-pip install node_editor
+pip install ipyspaghetti
 ```
 
 
@@ -96,7 +96,7 @@ The `jlpm` command is JupyterLab's pinned version of
 
 ```bash
 # Clone the repo to your local environment
-# Change directory to the node_editor directory
+# Change directory to the ipyspaghetti directory
 # Install package in development mode
 pip install -e .
 # Link your development version of the extension with JupyterLab
@@ -125,5 +125,5 @@ jupyter lab build --minimize=False
 ### Uninstall
 
 ```bash
-pip uninstall node_editor
+pip uninstall ipyspaghetti
 ```

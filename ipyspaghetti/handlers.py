@@ -11,13 +11,13 @@ class RouteHandler(APIHandler):
     # Jupyter server
     @tornado.web.authenticated
     def get(self):
-        self.finish(json.dumps({"data": "This is /node_editor/get_example endpoint!"}))
+        self.finish(json.dumps({"data": "This is /ipyspaghetti/get_example endpoint!"}))
 
 
 def setup_handlers(web_app):
     host_pattern = ".*$"
 
     base_url = web_app.settings["base_url"]
-    route_pattern = url_path_join(base_url, "node_editor", "get_example")
+    route_pattern = url_path_join(base_url, "ipyspaghetti", "get_example")
     handlers = [(route_pattern, RouteHandler)]
     web_app.add_handlers(host_pattern, handlers)

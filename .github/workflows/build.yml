@@ -30,8 +30,8 @@ jobs:
         jlpm run eslint:check
         python -m pip install .
 
-        jupyter serverextension list 2>&1 | grep -ie "node_editor.*OK"
+        jupyter serverextension list 2>&1 | grep -ie "ipyspaghetti.*OK"
 
-        jupyter labextension list 2>&1 | grep -ie "node_editor.*OK"
+        jupyter labextension list 2>&1 | grep -ie "ipyspaghetti.*OK"
         python -m jupyterlab.browser_check
         set +x
