@@ -53,7 +53,7 @@ Of course, this approach has a few shortcomings. First, completion is not as fri
 - [x] Support `ipyg` mimetype
 - [x] Edit the nodes' code in the browser _à la_ Jupyter Notebook
 - [x] Support multiple outputs
-- [ ] (partially done) Rename to IPySphaghetti
+- [x] (partially done) Rename to IPySphaghetti
 - [ ] Nice packaging
 
 ## Requirements
