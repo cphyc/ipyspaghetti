@@ -2,13 +2,12 @@
 
 ![Github Actions Status](https://github.com/cphyc/ipyspaghetti/workflows/Build/badge.svg)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/cphyc/ipyspaghetti/main?urlpath=lab/tree/example/demo.ipyg)
 
-A JupyterLab extension.
-
 This extension is composed of a Python package named `ipyspaghetti`
 for the server extension and a NPM package named `ipyspaghetti`
 for the frontend extension.
 
 It is subject to changes as this is still very much a work in progress. DO NOT RELY EXPECT IT TO WORK NOR RELY ON IT FOR IMPORTANT WORK.
+If you are interested in the idea, please feel free to contact me, as I don't have much time to progress on the project for the foreseeable future.
 
 Comments, reviews and contributions are more than welcome!
 
@@ -54,7 +53,8 @@ Of course, this approach has a few shortcomings. First, completion is not as fri
 - [x] Edit the nodes' code in the browser _à la_ Jupyter Notebook
 - [x] Support multiple outputs
 - [x] (partially done) Rename to IPySphaghetti
-- [ ] Nice packaging
+- [ ] Easy way to create new graphs (for the moment, an already-existing `.ipyg` need to be opened)
+- [ ] Nicer packaging
 
 ## Requirements
 
@@ -62,8 +62,9 @@ Of course, this approach has a few shortcomings. First, completion is not as fri
 
 ## Install
 
+For the moment, the package needs to be installed from source, which you can achieve using
 ```bash
-pip install ipyspaghetti
+pip install . -v
 ```
 
 
